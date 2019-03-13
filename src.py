@@ -6,14 +6,24 @@ import base64
 import time
 
 app = Flask(__name__)
-myUrl = "http://127.0.0.1:5000/"
-client_id ='7a1454711b0e4883affd973ca35a67e2'
-client_secret= '3c6e13176b624a84b44aab94a5c1df9b'
 
+# this needs to change at some point but not now
+myUrl = "http://127.0.0.1:5000/"
+sec = []
+with open("Secrets", "r") as infile:
+    for line in infile:
+        sec.append(line.strip())
+client_id = sec[0]
+client_secret= sec[1]
+
+print(client_id)
+print(client_secret)
+exit()
+
+# Get these The F out of here eventually
 global access_token
 global refresh_token 
-# params is query string
-# data is body
+
 
 @app.route("/")
 def initialize():
@@ -22,17 +32,18 @@ def initialize():
     else:
         # builds the Authentication URL and redirects the user there
         url = "https://accounts.spotify.com/authorize/"
-        params = { "client_id":client_id, "response_type":"code", "redirect_uri": myUrl + "login_landing" }
+        scopes = "playlist-read-private playlist-modify-public playlist-modify-private playlist-read-collaborative user-follow-read"
+        params = { "client_id":client_id, "response_type":"code", "redirect_uri": myUrl + "login_landing", "scopes":scopes}
         a = requests.get(url=url, params=params)
         return redirect(a.url)
 
 @app.route("/login_completed")
 def do_work():
-    global access_token, refresh_token
-    url = "https://api.spotify.com/v1/me"
-    headers = {"Authorization": "Bearer " + access_token, "Accept": "application/json", "Content-Type": "application/json"}
-    r = requests.get(url=url, headers=headers) 
-    print(r.text)
+    all_playlists = get_playlists().json()
+    for playlist in all_playlists["items"]:
+        if playlist["name"] == "Tycho":
+            tracklist = get_tracks(playlist["id"])
+            print(tracklist)
     return "done"
 
 @app.route("/login_landing")
@@ -58,8 +69,9 @@ def get_tokens():
     ttl = jsonResp["expires_in"]
     expires_at = int(time.time()) + ttl 
     save_tokens(access_token, refresh_token, expires_at)
+    validate_tokens()
 
-    return "tokens saved"
+    return redirect(myUrl + "login_completed")
 
 def refresh(refresh_token):
     url = "https://accounts.spotify.com/api/token/"
@@ -73,12 +85,12 @@ def make_authorization_headers(client_id, client_secret):
 
 def save_tokens(access_token, refresh_token, expires_at, user="Danny"):
     dataOut = {"expires_at_epoch": expires_at, "access_token": access_token, "refresh_token": refresh_token}
-    with open(user + "_tokens", "w") as outfile:
+    with tokenfile_open(user, "w") as outfile:
         json.dump(dataOut, outfile)
 
 def check_tokens(user):
     try:
-        with open(user + "_tokens", "r+") as infile:
+        with tokenfile_open(user, "r+") as infile:
             return json.load(infile)
     except:
         return None
@@ -89,13 +101,25 @@ def validate_tokens(user="Danny"):
         global access_token, refresh_token
         access_token = tokens["access_token"]
         refresh_token = tokens["refresh_token"]
-        print("saved")
         return tokens["expires_at_epoch"] > int(time.time()) + 60 * 5
     else:
         print("Tokens have expired")
         return None
 
+def get_playlists():
+    global access_token
+    url = "https://api.spotify.com/v1/me/playlists"
+    headers = {"Authorization": "Bearer " + access_token}
+    return requests.get(url=url, headers=headers) 
 
+# Takes a playlist id, not URI and returns the list of uri's
+def get_tracks(playlist_id):
+    global access_token
+    url = "https://api.spotify.com/v1/playlists/" + playlist_id + "/tracks"
+    headers = {"Authorization": "Bearer " + access_token}
+    tracks = requests.get(url=url, headers=headers)
+    jsonTrack = tracks.json()
+    return [jsonTrack["items"][i]["track"]["uri"] for i in range(len(jsonTrack["items"]))]
 
-
-
+def tokenfile_open(user, flag):
+    return open(user + "/" + user + "_tokens", flag)
