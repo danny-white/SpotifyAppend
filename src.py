@@ -60,7 +60,7 @@ def do_work():
     for playlist in all_playlists["items"]:
         if playlist["name"] == "Tycho":
             tracklist = get_tracks(playlist["id"])
-            print(tracklist)
+            write_out_tracklist("Danny", playlist["name"], playlist["uri"],tracklist)
     return "done"
 
 
@@ -76,6 +76,12 @@ def get_tracks(playlist_id):
     tracks = requests.get(url=url, headers=headers)
     jsonTrack = tracks.json()
     return [jsonTrack["items"][i]["track"]["uri"] for i in range(len(jsonTrack["items"]))]
+
+def write_out_tracklist(user, playlist_name, playlist_uri, tracklist):
+    with open(user + "/Playlist_" + playlist_name, "w+") as outfile:
+        json.dump({"Playlist_URI":playlist_uri, "Track_URIs":tracklist}, outfile)
+
+
 
 #########################
 #  Token Handling Code  #
