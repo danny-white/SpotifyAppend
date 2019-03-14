@@ -56,12 +56,14 @@ def get_tokens():
 
 @app.route("/login_completed")
 def do_work():
+    if not check_runtime_tokens():
+        validate_tokens("Danny")
     all_playlists = get_playlists().json()
     for playlist in all_playlists["items"]:
-        if playlist["name"] == "Tycho":
+        if playlist["name"] == "Squaw":
             tracklist = get_tracks(playlist["id"])
             write_out_tracklist("Danny", playlist["name"], playlist["uri"],tracklist)
-    return "done"
+    return "really really don"
 
 
 def get_playlists():
@@ -125,6 +127,12 @@ def check_tokens(user):
             return json.load(infile)
     except:
         return None
+def check_runtime_tokens():
+    global access_token, refresh_token
+    try:
+        return access_token and refresh_token
+    except NameError:
+        return 0
 
 def refresh_tokens(user):
     url = "https://accounts.spotify.com/api/token/"
