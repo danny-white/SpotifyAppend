@@ -28,7 +28,7 @@ class Drainlist:
         drainlist = json.load(source_file)
         self.name = drainlist["Playlist_URI"]
         # these are source names
-        source_names = drainlist["Sources"]
+        source_names = list(set(drainlist["Sources"]))
         self.source_names = source_names[:]
         self.sources = []
         if source_names:
@@ -36,6 +36,8 @@ class Drainlist:
                 self.add_source(name)
     
     def add_source(self, source_name):
+        if source_name in self.source_names:
+            return
         try:
             with open_playlist(source_name, "r") as source_file:
                 with open_playlist(source_name  + "_ref", "r") as ref_file:
@@ -71,6 +73,8 @@ with open_playlist("Drainlist", "r") as out:
     Dlist = Drainlist(out)
 print("here")
 Dlist.add_source(squaw_name)
+Dlist.add_source(source_name)
+Dlist.add_source(source_name)
 Dlist.write_out()
 
 #here but with
