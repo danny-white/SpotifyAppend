@@ -4,6 +4,7 @@ import requests
 import json 
 import base64
 import time
+import playlist
 
 app = Flask(__name__)
 
@@ -60,9 +61,10 @@ def do_work():
         validate_tokens("Danny")
     all_playlists = get_playlists().json()
     for playlist in all_playlists["items"]:
-        if playlist["name"] == "Squaw":
+        if playlist["name"] in ("Squaw", "Tycho"):
             tracklist = get_tracks(playlist["id"])
             write_out_tracklist("Danny", playlist["name"], playlist["uri"],tracklist)
+    the_thing()
     return "really really don"
 
 
@@ -80,9 +82,20 @@ def get_tracks(playlist_id):
     return [jsonTrack["items"][i]["track"]["uri"] for i in range(len(jsonTrack["items"]))]
 
 def write_out_tracklist(user, playlist_name, playlist_uri, tracklist):
-    with open(user + "/Playlist_" + playlist_name, "w+") as outfile:
+    with open(user + "/Playlists/" + playlist_uri, "w+") as outfile:
         json.dump({"Playlist_URI":playlist_uri, "Track_URIs":tracklist}, outfile)
+    try:
+        open(user + "/Playlists/" + playlist_uri + "_ref", "r")
+    except:
+        with open(user + "/Playlists/" + playlist_uri + "_ref", "w+") as outfile:
+            json.dump({"Playlist_URI":playlist_uri, "Track_URIs":tracklist}, outfile)
 
+def the_thing():
+    Dlist = 0 
+    with playlist.open_playlist("Drainlist", "r") as out:
+        Dlist = playlist.Drainlist(out)
+    Dlist.sync()
+    Dlist.write_out()
 
 
 #########################
@@ -160,3 +173,6 @@ def set_access_token(new_access_token):
 def set_refresh_token(new_refresh_token):
     global refresh_token
     refresh_token = new_refresh_token
+
+
+
