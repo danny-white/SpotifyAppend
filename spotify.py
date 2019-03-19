@@ -81,6 +81,19 @@ def get_tracks(playlist_id):
     jsonTrack = tracks.json()
     return [jsonTrack["items"][i]["track"]["uri"] for i in range(len(jsonTrack["items"]))]
 
+def add_tracks_to_drain(drainlist, tracks):
+    # todo make this work
+    trackstring = generate_uri_string(tracks)
+    url = "https://api.spotify.com/v1/playlists/%s/tracks?uris=%s" % (drainlist.name, trackstring)
+    headers = {"Authorization": "Bearer " + access_token}
+
+    retVal = requests.post(url=url, headers=headers)
+    print(retVal)
+
+
+def generate_uri_string(tracks):
+    return "%2C".join(tracks)
+
 # takes a downloaded plist (from spotify, not the playlist class), 
 # writes it out, if a reference does not exist, create one that is the same as the tracklist
 # if the reference does exist do not modify it
