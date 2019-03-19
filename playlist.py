@@ -17,11 +17,11 @@ class Playlist:
         return self.name == other.name and self.tracks == other.tracks
 
     def sync(self):
-        print("here2")
         diff = [i for i in self.tracks if i not in self.reference.tracks]
         self.reference.tracks += diff
         return diff
     
+    # dumps a playlist (class) to a file, just dumps the playlist and the ref, no updates is done
     def write_out(self):
         # todo messy code, but the only occurrance
         if self.reference == None:
@@ -70,12 +70,12 @@ class Drainlist:
 
     def write_out(self):
         with open_playlist(self.name, "w+") as outfile:
-            return json.dump({"Playlist_URI":self.name, "Sources":self.source_names}, outfile)
-        for s in Dlist.sources:
+            json.dump({"Playlist_URI":self.name, "Sources":self.source_names}, outfile)
+        for s in self.sources:
             s.reference.write_out()
     
+    # checks all sources for any songs to add, it then returns them and updates the references
     def sync(self):
-        print("here")
         diff = set([])
         for source in self.sources:
             [diff.add(i) for i in source.sync()]

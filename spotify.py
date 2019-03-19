@@ -61,7 +61,7 @@ def do_work():
         validate_tokens("Danny")
     all_playlists = get_playlists().json()
     for playlist in all_playlists["items"]:
-        if playlist["name"] in ("Squaw", "Tycho"):
+        if playlist["name"] in ("Squaw"): #, "Tycho"):
             tracklist = get_tracks(playlist["id"])
             write_out_tracklist("Danny", playlist["name"], playlist["uri"],tracklist)
     the_thing()
@@ -81,6 +81,9 @@ def get_tracks(playlist_id):
     jsonTrack = tracks.json()
     return [jsonTrack["items"][i]["track"]["uri"] for i in range(len(jsonTrack["items"]))]
 
+# takes a downloaded plist (from spotify, not the playlist class), 
+# writes it out, if a reference does not exist, create one that is the same as the tracklist
+# if the reference does exist do not modify it
 def write_out_tracklist(user, playlist_name, playlist_uri, tracklist):
     with open(user + "/Playlists/" + playlist_uri, "w+") as outfile:
         json.dump({"Playlist_URI":playlist_uri, "Track_URIs":tracklist}, outfile)
@@ -124,7 +127,6 @@ def validate_tokens(user="Danny"):
         if tokens["expires_at_epoch"] > int(time.time()) + 60 * 5:
             return tokens  
         else:
-            print("ere")
             access_token, ttl = refresh_tokens(user)
             set_access_token(access_token)
             expires_at = int(time.time()) + ttl 
