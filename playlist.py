@@ -99,7 +99,6 @@ def generate_drainlist(sources, destination_list):
         with open_playlist(destination_list, "w+") as outfile:
             json.dump({"Playlist_URI": destination_list, "Sources":sources}, outfile)
 
-generate_drainlist(["s1, s2"], "d1")
 
 
 

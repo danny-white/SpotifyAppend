@@ -82,13 +82,17 @@ def get_tracks(playlist_id):
     return [jsonTrack["items"][i]["track"]["uri"] for i in range(len(jsonTrack["items"]))]
 
 def add_tracks_to_drain(drainlist, tracks):
-    # todo make this work
-    trackstring = generate_uri_string(tracks)
-    url = "https://api.spotify.com/v1/playlists/%s/tracks?uris=%s" % (drainlist.name, trackstring)
-    headers = {"Authorization": "Bearer " + access_token}
 
-    retVal = requests.post(url=url, headers=headers)
-    print(retVal)
+    if tracks:
+        trackstring = generate_uri_string(tracks)
+        url = "https://api.spotify.com/v1/playlists/%s/tracks?uris=%s" % (drainlist.name.split(":")[2], trackstring)
+        headers = {"Authorization": "Bearer " + access_token}
+        retVal = requests.post(url=url, headers=headers)
+        print(retVal.url)
+        print(retVal.text)
+    else:
+        return "no tracks"
+    
 
 
 def generate_uri_string(tracks):
@@ -108,15 +112,14 @@ def write_out_tracklist(user, playlist_name, playlist_uri, tracklist):
 
 def the_thing():
     Dlist = 0 
-    with playlist.open_playlist("Drainlist", "r") as out:
+    with playlist.open_playlist("spotify:playlist:6E2XjEeEOEhUKVoftRHusb_drain", "r") as out:
         Dlist = playlist.Drainlist(out)
     
     diff = Dlist.sync()
+    print(diff)
     Dlist.write_out()
+    add_tracks_to_drain(Dlist, diff)
     Dlist.cleanup("Danny")
-
-
-
 
 #########################
 #  Token Handling Code  #
@@ -132,7 +135,7 @@ def get_tokens_from_code(code):
 def get_new_tokens():
     url = "https://accounts.spotify.com/authorize/"
     scopes = "playlist-read-private playlist-modify-public playlist-modify-private playlist-read-collaborative user-follow-read"
-    params = { "client_id":client_id, "response_type":"code", "redirect_uri": myUrl + "login_landing", "scopes":scopes}
+    params = { "client_id":client_id, "response_type":"code", "redirect_uri": myUrl + "login_landing", "scope":scopes}
     a = requests.get(url=url, params=params)
     return redirect(a.url)
 
