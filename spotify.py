@@ -61,7 +61,7 @@ def do_work():
         validate_tokens("Danny")
     all_playlists = get_playlists().json()
     for playlist in all_playlists["items"]:
-        if playlist["name"] in ("Squaw"): #, "Tycho"):
+        if playlist["name"] in ("Squaw", "Tycho"):
             tracklist = get_tracks(playlist["id"])
             write_out_tracklist("Danny", playlist["name"], playlist["uri"],tracklist)
     the_thing()
@@ -97,8 +97,12 @@ def the_thing():
     Dlist = 0 
     with playlist.open_playlist("Drainlist", "r") as out:
         Dlist = playlist.Drainlist(out)
-    Dlist.sync()
+    
+    diff = Dlist.sync()
     Dlist.write_out()
+    Dlist.cleanup("Danny")
+
+
 
 
 #########################

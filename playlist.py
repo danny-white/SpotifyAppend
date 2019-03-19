@@ -1,4 +1,5 @@
 import json
+import os
 source_name = "spotify:playlist:4L3PeQ9LzinSq0Q3KnzLvb"
 ref_name = "spotify:playlist:4L3PeQ9LzinSq0Q3KnzLvb"
 squaw_name = 'spotify:playlist:5P6Rs7hnXEJtApYHpOJ12H'
@@ -80,6 +81,13 @@ class Drainlist:
         for source in self.sources:
             [diff.add(i) for i in source.sync()]
         return diff
+
+    def cleanup(self, user):
+        for source in self.sources:
+            # todo the actual code
+            filename = user + "/"  "Playlists" + "/" + source.name
+            os.remove(filename)
+
 
             
 def open_playlist(playlist_name, flag):
