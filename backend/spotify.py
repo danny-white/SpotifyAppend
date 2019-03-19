@@ -59,26 +59,30 @@ def get_tokens():
 def do_work():
     if not check_runtime_tokens():
         validate_tokens("Danny")
-    all_playlists = get_playlists().json()
-    for playlist in all_playlists["items"]:
+    for playlist in get_playlists():
         if playlist["name"] in ("Squaw", "Tycho"):
             tracklist = get_tracks(playlist["id"])
             write_out_tracklist("Danny", playlist["name"], playlist["uri"],tracklist)
     # the_thing()
     return "really really don"
 
-
+# get's a list of playlists for the current user
 def get_playlists():
     url = "https://api.spotify.com/v1/me/playlists"
     headers = {"Authorization": "Bearer " + access_token}
-    return requests.get(url=url, headers=headers) 
+    requests.get(url=url, headers=headers) 
+    try:
+        all_playlists = requests.get(url=url, headers=headers).json()
+        return all_playlists["items"]
+    except:
+        print("unable to acquire playlist list")
 
-# Takes a playlist id, not URI and returns the list of uri's
+
+# Takes a playlist id, (not URI) and returns the list of track uri's
 def get_tracks(playlist_id):
     ret = []
     url = "https://api.spotify.com/v1/playlists/" + playlist_id + "/tracks"
     headers = {"Authorization": "Bearer " + access_token}
-    
     hasNext = 1
     while hasNext:
         tracks = requests.get(url=url, headers=headers)
@@ -86,9 +90,9 @@ def get_tracks(playlist_id):
         ret += [jsonTrack["items"][i]["track"]["uri"] for i in range(len(jsonTrack["items"]))]
         hasNext = jsonTrack["next"]
         url = jsonTrack["next"]
-    print(len(ret))
     return ret
 
+# takes a list of tracks and a drainlist object and appends the tracks to the drainlist
 def add_tracks_to_drain(drainlist, tracks):
 
     if tracks:
@@ -98,7 +102,17 @@ def add_tracks_to_drain(drainlist, tracks):
         retVal = requests.post(url=url, headers=headers)
     else:
         return "no tracks"
-    
+
+# splits a list into sublists of len splitsize, last sublist may be smaller if not enough elements are present (no padding)
+def split_list(tracks, splitsize):
+    end = splitsize
+    ret = []
+    front = 0
+    while (front < len(tracks)):
+        ret += [tracks[front:end]]
+        front = end
+        end = min(len(tracks), end + splitsize)
+    return ret
 
 
 def generate_uri_string(tracks):
