@@ -64,7 +64,7 @@ def do_work():
         if playlist["name"] in ("Squaw", "Tycho"):
             tracklist = get_tracks(playlist["id"])
             write_out_tracklist("Danny", playlist["name"], playlist["uri"],tracklist)
-    the_thing()
+    # the_thing()
     return "really really don"
 
 
@@ -75,11 +75,19 @@ def get_playlists():
 
 # Takes a playlist id, not URI and returns the list of uri's
 def get_tracks(playlist_id):
+    ret = []
     url = "https://api.spotify.com/v1/playlists/" + playlist_id + "/tracks"
     headers = {"Authorization": "Bearer " + access_token}
-    tracks = requests.get(url=url, headers=headers)
-    jsonTrack = tracks.json()
-    return [jsonTrack["items"][i]["track"]["uri"] for i in range(len(jsonTrack["items"]))]
+    
+    hasNext = 1
+    while hasNext:
+        tracks = requests.get(url=url, headers=headers)
+        jsonTrack = tracks.json()
+        ret += [jsonTrack["items"][i]["track"]["uri"] for i in range(len(jsonTrack["items"]))]
+        hasNext = jsonTrack["next"]
+        url = jsonTrack["next"]
+    print(len(ret))
+    return ret
 
 def add_tracks_to_drain(drainlist, tracks):
 
@@ -88,8 +96,6 @@ def add_tracks_to_drain(drainlist, tracks):
         url = "https://api.spotify.com/v1/playlists/%s/tracks?uris=%s" % (drainlist.name.split(":")[2], trackstring)
         headers = {"Authorization": "Bearer " + access_token}
         retVal = requests.post(url=url, headers=headers)
-        print(retVal.url)
-        print(retVal.text)
     else:
         return "no tracks"
     
