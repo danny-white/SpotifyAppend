@@ -44,7 +44,8 @@ class Drainlist:
         if source_names:
             for name in source_names:
                 self.add_source_init(name)
-    
+
+
     def add_source(self, source_name):
         if source_name in self.source_names:
             return
@@ -94,8 +95,11 @@ def open_playlist(playlist_name, flag):
     return open(user + "/"  "Playlists" + "/" + playlist_name, flag)
 
 
+def generate_drainlist(sources, destination_list):
+        with open_playlist(destination_list, "w+") as outfile:
+            json.dump({"Playlist_URI": destination_list, "Sources":sources}, outfile)
 
-
+generate_drainlist(["s1, s2"], "d1")
 
 
 
