@@ -1,0 +1,12 @@
+allows for playlists to have "sources". This means that a playlist will update upon additions to any of its sources, but if other songs are added to a source and then deleted from the destination they will not be copied.
+
+ex: 1 : {a,b} , 2 : {d, e} 3 : dest
+3 will initially contain: {a,b,d,e}
+then user deletes song a from 3
+3:{b,d,e}
+user adds c to 1:
+1: {a,b,c} 3 : {b,c,d,e}
+user deletes d from 2
+2: {e} (no change to 3)
+
+frontend to backend is plain HTTP requests with JSON data (do this)
