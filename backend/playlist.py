@@ -71,7 +71,7 @@ class Drainlist:
 
 
     def write_out(self):
-        with open_playlist(self.name, "w+") as outfile:
+        with open_playlist(self.name + "_drain", "w+") as outfile:
             json.dump({"Playlist_URI":self.name, "Sources":self.source_names}, outfile)
         for s in self.sources:
             s.reference.write_out()
@@ -85,7 +85,6 @@ class Drainlist:
 
     def cleanup(self, user):
         for source in self.sources:
-            # todo the actual code
             filename = user + "/"  "Playlists" + "/" + source.name
             os.remove(filename)
 
