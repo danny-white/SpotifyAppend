@@ -41,6 +41,7 @@ class Drainlist:
         source_names = list(set(drainlist["Sources"]))
         self.source_names = source_names
         self.sources = []
+        # if there are named sources add the proper playlist objects
         if source_names:
             for name in source_names:
                 self.add_source_init(name)

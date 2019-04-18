@@ -66,7 +66,13 @@ def get_tokens():
 
 @app.route("/authentication_completed")
 def signed_in():
-    do_work("Danny", None)
+    drainlist_name = "spotify:playlist:069rrIb9s1MRw2BBwXmeJE_drain"
+    drain = json.load(open_playlist(drainlist_name, "r"))
+    source_names = [p.split(":")[2] for p in drain["Sources"]]
+
+    # this works, but you can't build a Dlist until you have the playlist which you don't know until you have the drainlist
+
+    do_work("Danny", source_names, drain["Playlist_URI"] + "_drain")
     return "you made it"
 ####################################
 ######### End Auth Code  ########### 
@@ -106,18 +112,19 @@ def create_new_drain(drainlist, sources):
 ########### Sync Code  ############# 
 ####################################
 
-def do_work(user, drainlist):
+# given a list of sources, download them, get your drainlist, and syncs everything
+# this should be changed to take in a drainlist object
+def do_work(user, source_names, dlist_name):
     # checks tokens updates if needed
     if not check_runtime_tokens():
         validate_tokens("Danny")
     # gets all the playlists in the sources, writes them out to disk
     for playlist in get_playlists():
-        if playlist["name"] in ["Squaw", "Tycho"]:
+        if playlist["id"] in source_names:
             tracklist = get_tracks(playlist["id"])
             write_out_tracklist(user, playlist["name"], playlist["uri"],tracklist)
     
     # open the requisite drainlist
-    dlist_name = "spotify:playlist:069rrIb9s1MRw2BBwXmeJE_drain"
     Dlist = 0 
     with open_playlist(dlist_name, "r") as out:
         Dlist = Drainlist(out)
@@ -172,7 +179,6 @@ def get_tracks(playlist_id):
 
 # takes a list of tracks and a drainlist object and appends the tracks to the drainlist
 def add_tracks_to_drain(drainlist, tracks):
-    print(tracks)
     track_list = split_list(tracks, 100) 
     # if there are no tracks this is still an empty list, iterate through split list and upload
     for tracks in track_list:
@@ -224,7 +230,6 @@ def get_new_tokens():
 
 def validate_tokens(user="Danny"):
     tokens = check_tokens(user)
-    print(tokens)
     if tokens:
         set_access_token(tokens["access_token"])
         set_refresh_token(tokens["refresh_token"])
