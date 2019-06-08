@@ -10,3 +10,12 @@ user deletes d from 2
 2: {e} (no change to 3)
 
 frontend to backend is plain HTTP requests with JSON data (do this)
+
+Backend endpoints: auth, get and show all playlists, show and create drainlists
+
+daily run the sync. 
+
+
+current hardcoded: 
+    spotify: one drainlist filename
+    playlist: source_name, username

@@ -1,14 +1,11 @@
 import json
 import os
 source_name = "spotify:playlist:4L3PeQ9LzinSq0Q3KnzLvb"
-ref_name = "spotify:playlist:4L3PeQ9LzinSq0Q3KnzLvb"
-squaw_name = 'spotify:playlist:5P6Rs7hnXEJtApYHpOJ12H'
-
-user = "Danny"
 
 class Playlist:
-    def __init__(self, source_file, reference):
+    def __init__(self, user, source_file, reference):
         playlist = json.load(source_file)
+        self.user = user
         self.name = playlist["Playlist_URI"]
         self.tracks = playlist["Track_URIs"]
         self.reference = reference
@@ -34,8 +31,9 @@ class Playlist:
             self.reference.write_out()
 
 class Drainlist:
-    def __init__(self, source_file):
+    def __init__(self, user, source_file):
         drainlist = json.load(source_file)
+        self.user = user
         self.name = drainlist["Playlist_URI"]
         # these are source names
         source_names = list(set(drainlist["Sources"]))
@@ -53,8 +51,8 @@ class Drainlist:
         try:
             with open_playlist(source_name, "r") as source_file:
                 with open_playlist(source_name  + "_ref", "r") as ref_file:
-                    ref = Playlist(ref_file, None)
-                    templist = Playlist(source_file, ref)
+                    ref = Playlist(self.user, ref_file, None)
+                    templist = Playlist(self.user, source_file, ref)
             self.sources += [templist]
             self.source_names += [i.name for i in [templist]]
         except:
@@ -64,8 +62,8 @@ class Drainlist:
         try:
             with open_playlist(source_name, "r") as source_file:
                 with open_playlist(source_name  + "_ref", "r") as ref_file:
-                    ref = Playlist(ref_file, None)
-                    templist = Playlist(source_file, ref)
+                    ref = Playlist(self.user, ref_file, None)
+                    templist = Playlist(self.user, source_file, ref)
             self.sources += [templist]
         except:
             raise Exception("File not found")   
@@ -91,15 +89,13 @@ class Drainlist:
 
 
             
-def open_playlist(playlist_name, flag):
+def open_playlist(user, playlist_name, flag):
     return open(user + "/"  "Playlists" + "/" + playlist_name, flag)
 
 
 def generate_drainlist(sources, destination_list):
         with open_playlist(destination_list, "w+") as outfile:
             json.dump({"Playlist_URI": destination_list, "Sources":sources}, outfile)
-
-
 
 
 

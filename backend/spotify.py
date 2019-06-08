@@ -7,10 +7,17 @@ import time
 from playlist import *
 import os
 
+####################################
+######## Set up Constants ##########  
+####################################
+
 app = Flask(__name__)
+cwd = "/Users/Danny/Documents/CS/SpotifyAppend/backend"
 
+user = "Danny"
 
-# todo: change the API so that functions take in args for local testing, then create wrapper funcs that simply call the local 
+# todo: change the API so that functions take in args for local testing, 
+# then create wrapper funcs that simply call the local 
 # func after extracting the args from a request
 
 # this needs to change at some point but not now
@@ -18,9 +25,8 @@ myUrl = "http://127.0.0.1:5000/"
 # todo change this to return to the frontend homepage
 auth_completed_url = myUrl + "authentication_completed"
 
-
 sec = []
-with open("Secrets", "r") as infile:
+with open(cwd + "/Secrets", "r") as infile:
     for line in infile:
         sec.append(line.strip())
 client_id = sec[0]
@@ -33,16 +39,20 @@ global refresh_token
 ####################################
 ###########  Auth Code  ############  
 ####################################
+
+# This code is called when the app is first accessed from the Client, if the 
+# Tokens are present it presents the landing page, if not it requests tokens
 @app.route("/")
 def initialize():
     if validate_tokens():
         return redirect(auth_completed_url)
     else:
+        print(1)
         return get_new_tokens()
 
+# Landing page to return from a Spotify Token Request
 @app.route("/authentication_return")
 def get_tokens():
-    # upon successful authentication, we come here
     code = ""
     try: 
         code = request.args["code"]
@@ -53,21 +63,23 @@ def get_tokens():
     # if auth succeeds we build the url to get our tokens from the "code"
     response = get_tokens_from_code(code)
 
-    # extract the tokens and save them 
+    # Save Tokens
     jsonResp = response.json()
     set_access_token(jsonResp["access_token"])
     set_refresh_token(jsonResp["refresh_token"])
     ttl = jsonResp["expires_in"]
     expires_at = int(time.time()) + ttl 
     
-    # Save the Tokens back to the File, and redirect back to the complete page
     save_tokens(access_token, refresh_token, expires_at)
     return redirect(auth_completed_url)            
 
+# This is the "Main Page" that we will do our main work from 
+# (managing drainlists).
+# todo a one time refresh button to override the playlist refresh timer
 @app.route("/authentication_completed")
 def signed_in():
     drainlist_name = "spotify:playlist:069rrIb9s1MRw2BBwXmeJE_drain"
-    drain = json.load(open_playlist(drainlist_name, "r"))
+    drain = json.load(open_playlist(user, drainlist_name, "r"))
     source_names = [p.split(":")[2] for p in drain["Sources"]]
 
     # this works, but you can't build a Dlist until you have the playlist which you don't know until you have the drainlist
@@ -82,15 +94,17 @@ def signed_in():
 ######## Interactive Code ##########
 ####################################
 
+# Takes drains and formats them to be sent to the frontend
 @app.route("/list_drains")
 def list_drains_request():
     resp = app.make_response(json.dumps({"this": "that", "These":"Those"}))
     return resp
 
+# Collects all drains associated with a user
 def list_drains(user):
     return [filename for filename in os.listdir(os.getcwd()+ "/" + user + "/Playlists") if filename.endswith("_drain")]
 
-
+# Takes new drainlist data and formats to be sent to frontend
 @app.route("/new_drain")
 def create_new_drain_request():
     print(request.args)
@@ -98,8 +112,11 @@ def create_new_drain_request():
     return app.make_response(ret)
     # return proper JSON here
 
-def create_new_drain(drainlist, sources):
-    with open_playlist(drainlist + "_drain", "w+") as dfile:
+# creates a new drainlist
+# args: drainlist = new name from drainlist (will overwrite old ones)
+#       sources = list of playlist URI's 
+def create_new_drain(user, drainlist, sources):
+    with open_playlist(user, drainlist + "_drain", "w+") as dfile:
         json.dump({"Playlist_URI": drainlist, "Sources": sources}, dfile)
     return json.dumps({"Playlist_URI": drainlist, "Sources": sources})
 
@@ -122,12 +139,12 @@ def do_work(user, source_names, dlist_name):
     for playlist in get_playlists():
         if playlist["id"] in source_names:
             tracklist = get_tracks(playlist["id"])
-            write_out_tracklist(user, playlist["name"], playlist["uri"],tracklist)
+            write_out_tracklist(user, playlist["name"], playlist["uri"], tracklist)
     
     # open the requisite drainlist
     Dlist = 0 
-    with open_playlist(dlist_name, "r") as out:
-        Dlist = Drainlist(out)
+    with open_playlist(user, dlist_name, "r") as out:
+        Dlist = Drainlist(user, out)
     
     # run the sync program
     diff = Dlist.sync()
@@ -138,20 +155,25 @@ def do_work(user, source_names, dlist_name):
     # cleanup the files 
     Dlist.cleanup(user)
 
-# takes a downloaded plist (from spotify, not the playlist class), 
-# writes it out, if a reference does not exist, create one that is the same as the tracklist
-# if the reference does exist do not modify it
+# using the arguments, creates a saved version of the playlist, and 
+# saves a new reference playlist. If a reference already exists, skip
+# args: user = name of the current user
+#       playlist_name = name of the playlist being written out
+#       playlist_uri = spotify internal code for the playlist
+#       tracklist = list of tracks corresponding to this playlist
 def write_out_tracklist(user, playlist_name, playlist_uri, tracklist):
     with open(user + "/Playlists/" + playlist_uri, "w+") as outfile:
         json.dump({"Playlist_URI":playlist_uri, "Track_URIs":tracklist}, outfile)
     try:
-        open(user + "/Playlists/" + playlist_uri + "_ref", "r")
+        with open(user + "/Playlists/" + playlist_uri + "_ref", "r") as outfile:
+            1
     except:
         with open(user + "/Playlists/" + playlist_uri + "_ref", "w+") as outfile:
             json.dump({"Playlist_URI":playlist_uri, "Track_URIs":tracklist}, outfile)
 
     
 # get's a list of playlists for the current user
+# PURE SPOTIFY API CALL
 def get_playlists():
     url = "https://api.spotify.com/v1/me/playlists"
     headers = {"Authorization": "Bearer " + access_token}
@@ -164,9 +186,10 @@ def get_playlists():
 
 
 # Takes a playlist id, (not URI) and returns the list of track uri's
-def get_tracks(playlist_id):
+# PURE SPOTIFY API CALL
+def get_tracks(playlist_uri):
     ret = []
-    url = "https://api.spotify.com/v1/playlists/" + playlist_id + "/tracks"
+    url = "https://api.spotify.com/v1/playlists/" + playlist_uri + "/tracks"
     headers = {"Authorization": "Bearer " + access_token}
     hasNext = 1
     while hasNext:
@@ -178,6 +201,9 @@ def get_tracks(playlist_id):
     return ret
 
 # takes a list of tracks and a drainlist object and appends the tracks to the drainlist
+# PURE SPOTIFY API CALL
+# args: drainlist = drainlist object that is having tracks added
+#       tracks = tracks to be added in a list
 def add_tracks_to_drain(drainlist, tracks):
     track_list = split_list(tracks, 100) 
     # if there are no tracks this is still an empty list, iterate through split list and upload
@@ -189,7 +215,8 @@ def add_tracks_to_drain(drainlist, tracks):
     else:
         return "no tracks"
 
-# splits a list into sublists of len splitsize, last sublist may be smaller if not enough elements are present (no padding)
+# splits a list into sublists of len splitsize, last sublist may be smaller if 
+# not enough elements are present (no padding)
 def split_list(tracks, splitsize):
     tracks =  list(tracks)
     end = splitsize
@@ -201,6 +228,7 @@ def split_list(tracks, splitsize):
         end = min(len(tracks), end + splitsize)
     return ret
 
+# changes a list of tracks into a properly formatted uri string for bulk loads
 def generate_uri_string(tracks):
     return "%2C".join(tracks)
 
@@ -213,7 +241,7 @@ def generate_uri_string(tracks):
 ####################################
 ###### Token Handling Code ######### 
 ####################################
-
+# PURE SPOTIFY API CALL
 def get_tokens_from_code(code):
     url = "https://accounts.spotify.com/api/token/"
     params = {"grant_type" :"authorization_code", "code" : code, "redirect_uri":myUrl + "authentication_return"}
@@ -221,6 +249,7 @@ def get_tokens_from_code(code):
     return requests.post(url=url, data=params, headers=headers)
 
 # Builds the Authentication URL and redirects the user there, so more tokens can be gathered
+# PURE SPOTIFY API CALL
 def get_new_tokens():
     url = "https://accounts.spotify.com/authorize/"
     scopes = "playlist-read-private playlist-modify-public playlist-modify-private playlist-read-collaborative user-follow-read"
@@ -257,7 +286,7 @@ def check_runtime_tokens():
         return access_token and refresh_token
     except NameError:
         return 0
-
+# PURE SPOTIFY API CALL
 def refresh_tokens(user):
     url = "https://accounts.spotify.com/api/token/"
     data = {"grant_type" : "refresh_token", "refresh_token" : refresh_token}
