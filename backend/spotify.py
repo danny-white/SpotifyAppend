@@ -5,6 +5,7 @@ import json
 import base64
 import time
 from playlist import *
+import io
 import os
 
 ####################################
@@ -14,7 +15,8 @@ import os
 app = Flask(__name__)
 cwd = "/Users/Danny/Documents/CS/SpotifyAppend/backend"
 
-user = "Danny"
+# hacky test global thing, will remove later once the frontend is properly attached 
+user = "Danny" if __name__ == "__main__" else "Test_User" 
 
 # todo: change the API so that functions take in args for local testing, 
 # then create wrapper funcs that simply call the local 
@@ -44,7 +46,7 @@ global refresh_token
 # Tokens are present it presents the landing page, if not it requests tokens
 @app.route("/")
 def initialize():
-    if validate_tokens():
+    if validate_tokens(user):
         return redirect(auth_completed_url)
     else:
         return get_new_tokens()
@@ -69,7 +71,7 @@ def get_tokens():
     ttl = jsonResp["expires_in"]
     expires_at = int(time.time()) + ttl 
     
-    save_tokens(access_token, refresh_token, expires_at)
+    save_tokens(access_token, refresh_token, expires_at, user)
     return redirect(auth_completed_url)            
 
 # This is the "Main Page" that we will do our main work from 
@@ -77,12 +79,6 @@ def get_tokens():
 # todo a one time refresh button to override the playlist refresh timer
 @app.route("/authentication_completed")
 def signed_in():
-    drainlist_name = "spotify:playlist:069rrIb9s1MRw2BBwXmeJE_drain"
-    drain = json.load(open_playlist(user, drainlist_name, "r"))
-    source_names = [p.split(":")[2] for p in drain["Sources"]]
-
-    # this works, but you can't build a Dlist until you have the playlist which you don't know until you have the drainlist
-    # do_work("Danny", source_names, drain["Playlist_URI"] + "_drain")
     return "you made it"
 ####################################
 ######### End Auth Code  ########### 
@@ -105,7 +101,6 @@ def list_drains(user):
 # Takes new drainlist data and formats to be sent to frontend
 @app.route("/new_drain")
 def create_new_drain_request():
-    print(request.args)
     ret = create_new_drain(request.args["drainlist"], request.args["sources"])
     return app.make_response(ret)
     # return proper JSON here
@@ -114,7 +109,9 @@ def create_new_drain_request():
 # args: drainlist = new name from drainlist (will overwrite old ones)
 #       sources = list of playlist URI's 
 def create_new_drain(user, drainlist, sources):
-    with open_playlist(user, drainlist + "_drain", "w+") as dfile:
+    if "spotify:playlist:" not in sources[0]:
+        sources = ["spotify:playlist:" + source for source in sources]
+    with open_playlist(user, drainlist, "w+") as dfile:
         json.dump({"Playlist_URI": drainlist, "Sources": sources}, dfile)
     return json.dumps({"Playlist_URI": drainlist, "Sources": sources})
 
@@ -128,11 +125,11 @@ def create_new_drain(user, drainlist, sources):
 def do_work(user, source_names, dlist_name):
     # checks tokens updates if needed
     if not check_runtime_tokens():
-        validate_tokens("Danny")
+        validate_tokens(user)
     # gets all the playlists in the sources, writes them out to disk
-    for playlist in get_playlists():
+    for playlist in io.get_playlists(access_token):
         if playlist["id"] in source_names:
-            tracklist = get_tracks(playlist["id"])
+            tracklist = io.get_tracks(access_token, playlist["id"])
             write_out_tracklist(user, playlist["name"], playlist["uri"], tracklist)
     
     # open the requisite drainlist
@@ -145,7 +142,7 @@ def do_work(user, source_names, dlist_name):
     # apply the diff to reference lists
     Dlist.write_out()
     # add them to the drain playlist
-    add_tracks_to_drain(Dlist, diff)
+    io.add_tracks_to_drain(Dlist, diff)
     # cleanup the files 
     Dlist.cleanup(user)
 
@@ -166,67 +163,7 @@ def write_out_tracklist(user, playlist_name, playlist_uri, tracklist):
         with open(user + "/Playlists/" + playlist_uri + "_ref", "w+") as outfile:
             json.dump({"Playlist_URI":playlist_uri, "Track_URIs":tracklist}, outfile)
 
-####################################
-######## Spotify IO Code  ########## 
-####################################
 
-
-# get's a list of playlists for the current user
-# todo you can remove this, and instead source based 
-# on the names in the drainlist
-def get_playlists():
-    url = "https://api.spotify.com/v1/me/playlists"
-    headers = {"Authorization": "Bearer " + access_token}
-    requests.get(url=url, headers=headers) 
-    try:
-        all_playlists = requests.get(url=url, headers=headers).json()
-        return all_playlists["items"]
-    except:
-        print("unable to acquire playlist list")
-
-#todo dont need this, if you have a playlist uri just get the tracks directly ya dip
-def get_playlist(uri="6E2XjEeEOEhUKVoftRHusb"): #defaults to nursultan bulletakbay
-    url = "https://api.spotify.com/v1/playlists/" + uri
-    headers = {"Authorization": "Bearer " + access_token}
-    requests.get(url=url, headers=headers)
-    try:
-        playlist = requests.get(url=url, headers=headers).json()
-        return playlist
-    except:
-        print("unable to acquire playlist")
-
-
-# Takes a playlist id, (not URI) and returns the list of track uri's
-def get_tracks(playlist_uri):
-    ret = []
-    url = "https://api.spotify.com/v1/playlists/" + playlist_uri + "/tracks"
-    headers = {"Authorization": "Bearer " + access_token}
-    hasNext = 1
-    while hasNext:
-        tracks = requests.get(url=url, headers=headers)
-        jsonTrack = tracks.json()
-        ret += [jsonTrack["items"][i]["track"]["uri"] for i in range(len(jsonTrack["items"]))]
-        hasNext = jsonTrack["next"]
-        url = jsonTrack["next"]
-    return ret
-
-# takes a list of tracks and a drainlist object and appends the tracks to the drainlist
-# args: drainlist = drainlist object that is having tracks added
-#       tracks = tracks to be added in a list
-def add_tracks_to_drain(drainlist, tracks):
-    track_list = split_list(tracks, 100) 
-    # if there are no tracks this is still an empty list, iterate through split list and upload
-    for tracks in track_list:
-        trackstring = generate_uri_string(tracks)
-        url = "https://api.spotify.com/v1/playlists/%s/tracks?uris=%s" % (drainlist.name.split(":")[2], trackstring)
-        headers = {"Authorization": "Bearer " + access_token}
-        retVal = requests.post(url=url, headers=headers)
-    else:
-        return "no tracks"
-
-####################################
-###### End Spotify IO Code  ######## 
-####################################
 
 
 ####################################
@@ -248,7 +185,7 @@ def get_new_tokens():
     a = requests.get(url=url, params=params)
     return redirect(a.url)
 
-def validate_tokens(user="Danny"):
+def validate_tokens(user):
     tokens = check_tokens(user)
     if tokens:
         set_access_token(tokens["access_token"])
@@ -259,7 +196,7 @@ def validate_tokens(user="Danny"):
             access_token, ttl = refresh_tokens(user)
             set_access_token(access_token)
             expires_at = int(time.time()) + ttl 
-            save_tokens(access_token, refresh_token, expires_at)
+            save_tokens(access_token, refresh_token, expires_at, user)
             return True
     else:
         print("Tokens are missing or corrupted")
@@ -285,7 +222,7 @@ def refresh_tokens(user):
     resp = requests.post(url=url, data = data, headers = headers).json()
     return resp["access_token"], resp["expires_in"]
 
-def save_tokens(access_token, refresh_token, expires_at, user="Danny"):
+def save_tokens(access_token, refresh_token, expires_at, user):
     dataOut = {"expires_at_epoch": expires_at, "access_token": access_token, "refresh_token": refresh_token}
     with tokenfile_open(user, "w") as outfile:
         json.dump(dataOut, outfile)

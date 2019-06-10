@@ -8,7 +8,8 @@ import spotify
 import playlist
 
 test_user = "Test_User"
-
+drain_name = "Temp_drain"
+sources = ["4L3PeQ9LzinSq0Q3KnzLvb", "6E2XjEeEOEhUKVoftRHusb"]
 # drainlist_text = 
 
 class TestSpotifyMethods(unittest.TestCase):
@@ -54,10 +55,10 @@ class TestSpotifyMethods(unittest.TestCase):
         new_drainlist = "new_drainlist"
         playlist_uris = ["p3,p4,p5"]
         spotify.create_new_drain(test_user, new_drainlist, playlist_uris)
-        with spotify.open_playlist(test_user, new_drainlist + "_drain") as infile:   
+        with spotify.open_playlist(test_user, new_drainlist) as infile:   
             for line in infile:
                 self.assertTrue(all([plist in line for plist in playlist_uris]))
-        os.remove(test_user + "/Playlists/new_drainlist_drain")
+        os.remove(test_user + "/Playlists/new_drainlist")
 
     # write Drainlist and Playlist class tests
 class TestPlaylistMethods(unittest.TestCase):
@@ -95,9 +96,6 @@ class TestDrainlistMethods(unittest.TestCase):
     def setUp(self):
         with spotify.open_playlist(test_user, "test_drain") as infile:
             Dlist = playlist.Drainlist(test_user, infile)
-    def test_add_source(self):
-        self.assertEqual(1,1)
-        print(Dlist)
         
 
     # def add_source_init(self):
@@ -110,7 +108,23 @@ class TestDrainlistMethods(unittest.TestCase):
 
 class IntegrationTests(unittest.TestCase):
     spotify.initialize()
-    spotify.get_playlists()
+    spotify.create_new_drain(test_user, drain_name, sources)
+
+
+    with spotify.open_playlist(test_user, drain_name) as infile:
+        try:
+            Dlist = playlist.Drainlist(test_user, infile)
+        except FileNotFoundError as e:
+            print(e)
+    # diff = Dlist.sync()
+    # Dlist.write_out()
+
+    # Dlist.cleanup(test_user)
+    # print(diff)
+
+
+
+    os.remove("Test_User/Playlists/" + drain_name)
 
 if __name__ == '__main__':
     unittest.main()

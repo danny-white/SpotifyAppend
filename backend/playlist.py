@@ -1,6 +1,7 @@
 import json
 import os
-source_name = "spotify:playlist:4L3PeQ9LzinSq0Q3KnzLvb"
+import io
+
 
 class Playlist:
     def __init__(self, user, name, tracks, reference):
@@ -30,17 +31,17 @@ class Playlist:
         self.reference.tracks += diff
         return diff
     
-    # dumps a playlist (class) to a file, just dumps the playlist and the ref, no updates is done
+    # dumps a playlist (class) to a file, just dumps the playlist and the ref, no updates are done
     def write_out(self):
         # todo messy code, but the only occurrance
-        if self.reference == None:
-            with open_playlist(self.user, self.name + "_ref", "w") as outfile:
-                json.dump({"Playlist_URI":self.name, "Track_URIs":self.tracks}, outfile)
-        else: 
-            with open_playlist(self.user, self.name, "w") as outfile:
-                json.dump({"Playlist_URI":self.name, "Track_URIs":self.tracks}, outfile)
         if self.reference:
             self.reference.write_out()
+            with open_playlist(self.user, self.name, "w") as outfile:
+                json.dump({"Playlist_URI":self.name, "Track_URIs":self.tracks}, outfile)
+        else:
+            with open_playlist(self.user, self.name + "_ref", "w") as outfile:
+                json.dump({"Playlist_URI":self.name, "Track_URIs":self.tracks}, outfile) 
+
 
 class Drainlist:
     def __init__(self, user, source_file):
@@ -48,7 +49,7 @@ class Drainlist:
         self.user = user
         self.name = drainlist["Playlist_URI"]
         # these are source names
-        self.source_names = [name.split(":")[2] for name in list(set(drainlist["Sources"]))]
+        self.source_names = list(set(drainlist["Sources"]))
         self.sources = []
         # if there are named sources add the proper playlist objects
         if self.source_names:
@@ -70,18 +71,15 @@ class Drainlist:
             raise Exception("File not found")   
 
     def add_source_init(self, source_name):
-        try:
-            with open_playlist(self.user, source_name, "r") as source_file:
-                with open_playlist(self.user, source_name  + "_ref", "r") as ref_file:
-                    ref = Playlist.from_file(self.user, ref_file, None)
-                    templist = Playlist.from_file(self.user, source_file, ref)
-            self.sources += [templist]
-        except:
-            raise Exception("File not found")   
+        with open_playlist(self.user, source_name, "r") as source_file:
+            with open_playlist(self.user, source_name  + "_ref", "r") as ref_file:
+                ref = Playlist.from_file(self.user, ref_file, None)
+                templist = Playlist.from_file(self.user, source_file, ref)
+        self.sources += [templist]
 
 
     def write_out(self):
-        with open_playlist(self.user, self.name + "_drain", "w+") as outfile:
+        with open_playlist(self.user, self.name, "w+") as outfile:
             json.dump({"Playlist_URI":self.name, "Sources":self.source_names}, outfile)
         for s in self.sources:
             s.reference.write_out()
