@@ -47,7 +47,6 @@ def initialize():
     if validate_tokens():
         return redirect(auth_completed_url)
     else:
-        print(1)
         return get_new_tokens()
 
 # Landing page to return from a Spotify Token Request
@@ -83,8 +82,7 @@ def signed_in():
     source_names = [p.split(":")[2] for p in drain["Sources"]]
 
     # this works, but you can't build a Dlist until you have the playlist which you don't know until you have the drainlist
-
-    do_work("Danny", source_names, drain["Playlist_URI"] + "_drain")
+    # do_work("Danny", source_names, drain["Playlist_URI"] + "_drain")
     return "you made it"
 ####################################
 ######### End Auth Code  ########### 
@@ -125,10 +123,6 @@ def create_new_drain(user, drainlist, sources):
 ####################################
 
 
-####################################
-########### Sync Code  ############# 
-####################################
-
 # given a list of sources, download them, get your drainlist, and syncs everything
 # this should be changed to take in a drainlist object
 def do_work(user, source_names, dlist_name):
@@ -145,7 +139,7 @@ def do_work(user, source_names, dlist_name):
     Dlist = 0 
     with open_playlist(user, dlist_name, "r") as out:
         Dlist = Drainlist(user, out)
-    
+
     # run the sync program
     diff = Dlist.sync()
     # apply the diff to reference lists
@@ -157,6 +151,7 @@ def do_work(user, source_names, dlist_name):
 
 # using the arguments, creates a saved version of the playlist, and 
 # saves a new reference playlist. If a reference already exists, skip
+# this does not user in memory playlist objects, just raw data from Spotify
 # args: user = name of the current user
 #       playlist_name = name of the playlist being written out
 #       playlist_uri = spotify internal code for the playlist
@@ -171,9 +166,14 @@ def write_out_tracklist(user, playlist_name, playlist_uri, tracklist):
         with open(user + "/Playlists/" + playlist_uri + "_ref", "w+") as outfile:
             json.dump({"Playlist_URI":playlist_uri, "Track_URIs":tracklist}, outfile)
 
-    
+####################################
+######## Spotify IO Code  ########## 
+####################################
+
+
 # get's a list of playlists for the current user
-# PURE SPOTIFY API CALL
+# todo you can remove this, and instead source based 
+# on the names in the drainlist
 def get_playlists():
     url = "https://api.spotify.com/v1/me/playlists"
     headers = {"Authorization": "Bearer " + access_token}
@@ -184,9 +184,19 @@ def get_playlists():
     except:
         print("unable to acquire playlist list")
 
+#todo dont need this, if you have a playlist uri just get the tracks directly ya dip
+def get_playlist(uri="6E2XjEeEOEhUKVoftRHusb"): #defaults to nursultan bulletakbay
+    url = "https://api.spotify.com/v1/playlists/" + uri
+    headers = {"Authorization": "Bearer " + access_token}
+    requests.get(url=url, headers=headers)
+    try:
+        playlist = requests.get(url=url, headers=headers).json()
+        return playlist
+    except:
+        print("unable to acquire playlist")
+
 
 # Takes a playlist id, (not URI) and returns the list of track uri's
-# PURE SPOTIFY API CALL
 def get_tracks(playlist_uri):
     ret = []
     url = "https://api.spotify.com/v1/playlists/" + playlist_uri + "/tracks"
@@ -201,7 +211,6 @@ def get_tracks(playlist_uri):
     return ret
 
 # takes a list of tracks and a drainlist object and appends the tracks to the drainlist
-# PURE SPOTIFY API CALL
 # args: drainlist = drainlist object that is having tracks added
 #       tracks = tracks to be added in a list
 def add_tracks_to_drain(drainlist, tracks):
@@ -215,27 +224,9 @@ def add_tracks_to_drain(drainlist, tracks):
     else:
         return "no tracks"
 
-# splits a list into sublists of len splitsize, last sublist may be smaller if 
-# not enough elements are present (no padding)
-def split_list(tracks, splitsize):
-    tracks =  list(tracks)
-    end = splitsize
-    ret = []
-    front = 0
-    while (front < len(tracks)):
-        ret += [tracks[front:end]]
-        front = end
-        end = min(len(tracks), end + splitsize)
-    return ret
-
-# changes a list of tracks into a properly formatted uri string for bulk loads
-def generate_uri_string(tracks):
-    return "%2C".join(tracks)
-
 ####################################
-######### End Sync Code  ########### 
+###### End Spotify IO Code  ######## 
 ####################################
-
 
 
 ####################################
@@ -319,3 +310,27 @@ def set_refresh_token(new_refresh_token):
 ####################################
 
 
+####################################
+########### Utilities  #############
+####################################
+
+# splits a list into sublists of len splitsize, last sublist may be smaller if 
+# not enough elements are present (no padding)
+def split_list(tracks, splitsize):
+    tracks =  list(tracks)
+    end = splitsize
+    ret = []
+    front = 0
+    while (front < len(tracks)):
+        ret += [tracks[front:end]]
+        front = end
+        end = min(len(tracks), end + splitsize)
+    return ret
+
+# changes a list of tracks into a properly formatted uri string for bulk loads
+def generate_uri_string(tracks):
+    return "%2C".join(tracks)
+
+####################################
+######### End Utilities  ###########
+####################################
