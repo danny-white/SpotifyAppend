@@ -5,6 +5,7 @@ sys.path.append('..')
 import unittest
 
 import spotify
+import spio
 import playlist
 
 test_user = "Test_User"
@@ -33,13 +34,13 @@ class TestSpotifyMethods(unittest.TestCase):
 
         # test to ensure the reference was not updated, but the 
         # playlist was
-        with spotify.open_playlist(user, name) as infile:   
+        with playlist.open_playlist(user, name) as infile:
             for line in infile:
                 for t in new_tracks:
                     self.assertTrue(t in line)
                 for t in tracks:
                     self.assertFalse(t in line)
-        with spotify.open_playlist(user, name + "_ref") as infile:   
+        with playlist.open_playlist(user, name + "_ref") as infile:
             for line in infile:
                 for t in tracks:
                     self.assertTrue(t in line)
@@ -55,7 +56,7 @@ class TestSpotifyMethods(unittest.TestCase):
         new_drainlist = "new_drainlist"
         playlist_uris = ["p3,p4,p5"]
         spotify.create_new_drain(test_user, new_drainlist, playlist_uris)
-        with spotify.open_playlist(test_user, new_drainlist) as infile:   
+        with playlist.open_playlist(test_user, new_drainlist) as infile:
             for line in infile:
                 self.assertTrue(all([plist in line for plist in playlist_uris]))
         os.remove(test_user + "/Playlists/new_drainlist")
@@ -81,10 +82,10 @@ class TestPlaylistMethods(unittest.TestCase):
         plist2.reference.name = "test2"
         plist2.write_out()
 
-        with spotify.open_playlist(test_user, "test2") as infile:
+        with playlist.open_playlist(test_user, "test2") as infile:
             for line in infile:
                 self.assertTrue(all([i in line for i in ["t1","t2","t3"]]))
-        with spotify.open_playlist(test_user, "test2_ref") as infile:
+        with playlist.open_playlist(test_user, "test2_ref") as infile:
             for line in infile:
                 self.assertTrue(all([i in line for i in ["t1","t2","t3"]]))
 
@@ -107,27 +108,33 @@ class TestDrainlistMethods(unittest.TestCase):
     # def cleanup(self):
 
 class IntegrationTests(unittest.TestCase):
-    spotify.initialize()
-    spotify.create_new_drain(test_user, drain_name, sources)
+    def test_integ_one(self):
+        spotify.initialize()
+        spotify.create_new_drain(test_user, drain_name, sources)
 
-
-    with spotify.open_playlist(test_user, drain_name) as infile:
-        try:
+        with playlist.open_playlist(test_user, drain_name) as infile:
             Dlist = playlist.Drainlist(test_user, infile)
-        except FileNotFoundError as e:
-            print(e)
-    # diff = Dlist.sync()
-    # Dlist.write_out()
+        dropped_track = Dlist.sources[0].reference.tracks.pop()
+        diff = Dlist.sync()
+        self.assertEqual(diff, {dropped_track})
+        Dlist.write_out()
+        diff = Dlist.sync()
+        self.assertEqual(diff, set())
 
-    # Dlist.cleanup(test_user)
-    # print(diff)
+        Dlist.cleanup(test_user)
+        for plist in Dlist.sources:
+            self.assertFalse(os.path.exists(test_user + "/Playlist/" + plist.name))
 
 
+        os.remove("Test_User/Playlists/" + drain_name)
+        for f in os.listdir(test_user + "/Playlists/"):
+            if f.startswith("spotify:playlist:"):
+                os.remove(test_user + "/Playlists/" + f)
 
-    os.remove("Test_User/Playlists/" + drain_name)
 
 if __name__ == '__main__':
     unittest.main()
+    # print(spio.get_access_token(test_user))
 
 # setup and teardown are within a single class, they bookend each test in that class
 # setupclass and teardownclass this bookends an entire test class

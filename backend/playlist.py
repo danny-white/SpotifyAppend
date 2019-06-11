@@ -1,6 +1,6 @@
 import json
 import os
-import io
+import spio
 
 
 class Playlist:
@@ -17,6 +17,11 @@ class Playlist:
         tracks = playlist["Track_URIs"]
         return cls(user, name, tracks, reference)
 
+    @classmethod
+    def from_web_api(cls, user, access_token, id, reference):
+        tracks = spio.get_tracks(access_token, id)
+        name = "spotify:playlist:" + id
+        return cls(user, name, tracks, reference)
 
     def __eq__(self, other):
         if self is None and other is None:
@@ -51,10 +56,14 @@ class Drainlist:
         # these are source names
         self.source_names = list(set(drainlist["Sources"]))
         self.sources = []
+
         # if there are named sources add the proper playlist objects
-        if self.source_names:
-            for name in self.source_names:
+        for name in self.source_names:
+            try:
                 self.add_source_init(name)
+            except FileNotFoundError as e:
+                id = e.filename.split(":")[2]
+                self.add_source_api(id)
 
 
     def add_source(self, source_name):
@@ -77,6 +86,14 @@ class Drainlist:
                 templist = Playlist.from_file(self.user, source_file, ref)
         self.sources += [templist]
 
+    def add_source_api(self, id):
+        ref = Playlist.from_web_api(self.user, spio.get_access_token(self.user), id, None)
+        templist = Playlist.from_web_api(self.user, spio.get_access_token(self.user), id, ref)
+
+        templist.write_out()
+        ref.write_out()
+        self.sources += [templist]
+
 
     def write_out(self):
         with open_playlist(self.user, self.name, "w+") as outfile:
@@ -86,7 +103,7 @@ class Drainlist:
     
     # checks all sources for any songs to add, it then returns them and updates the references
     def sync(self):
-        diff = set([])
+        diff = set()
         for source in self.sources:
             [diff.add(i) for i in source.sync()]
         return diff
