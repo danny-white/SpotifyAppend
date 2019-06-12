@@ -3,6 +3,7 @@ import json
 
 myUrl = "http://127.0.0.1:5000/"
 cwd = "/Users/Danny/Documents/CS/SpotifyAppend/backend"
+uri_header = "spotify:playlist:"
 sec = []
 with open(cwd + "/Secrets", "r") as infile:
     for line in infile:
@@ -30,7 +31,8 @@ def get_playlists(access_token):
         print("unable to acquire playlist list")
 
 #todo dont need this, if you have a playlist uri just get the tracks directly ya dip
-def get_playlist(access_token, id="6E2XjEeEOEhUKVoftRHusb"): #defaults to nursultan bulletakbay
+def get_playlist(access_token, uri="spotify:playlist:6E2XjEeEOEhUKVoftRHusb"): #defaults to nursultan bulletakbay
+    id = uri.split(":")[2]
     url = "https://api.spotify.com/v1/playlists/" + id
     headers = {"Authorization": "Bearer " + access_token}
     requests.get(url=url, headers=headers)
@@ -42,7 +44,8 @@ def get_playlist(access_token, id="6E2XjEeEOEhUKVoftRHusb"): #defaults to nursul
 
 
 # Takes a playlist id, (not URI) and returns the list of track uri's
-def get_tracks(access_token, playlist_id="6E2XjEeEOEhUKVoftRHusb"):
+def get_tracks(access_token, uri="spotify:playlist:6E2XjEeEOEhUKVoftRHusb"):
+    playlist_id = uri.split(":")[2]
     ret = []
     url = "https://api.spotify.com/v1/playlists/" + playlist_id + "/tracks"
     headers = {"Authorization": "Bearer " + access_token}
@@ -59,13 +62,26 @@ def get_tracks(access_token, playlist_id="6E2XjEeEOEhUKVoftRHusb"):
 # args: drainlist = drainlist object that is having tracks added
 #       tracks = tracks to be added in a list
 def add_tracks_to_drain(access_token, drainlist, tracks):
-    track_list = split_list(tracks, 100) 
+    track_list = split_list(tracks, 100)
     # if there are no tracks this is still an empty list, iterate through split list and upload
+    id = drainlist.name.split(":")[2]
     for tracks in track_list:
         trackstring = generate_uri_string(tracks)
-        url = "https://api.spotify.com/v1/playlists/%s/tracks?uris=%s" % (drainlist.name.split(":")[2], trackstring)
+        url = "https://api.spotify.com/v1/playlists/%s/tracks?uris=%s" % (id, trackstring)
         headers = {"Authorization": "Bearer " + access_token}
-        retVal = requests.post(url=url, headers=headers)
+        requests.post(url=url, headers=headers)
+    else:
+        return "no tracks"
+
+def remove_tracks_from_drain(access_token, drainlist, tracks):
+    id = drainlist.name.split(":")[2]
+    track_list = split_list(tracks, 100)
+    for tracks in track_list:
+        url = "https://api.spotify.com/v1/playlists/" + id + "/tracks"
+        headers = {"Authorization": "Bearer " + access_token}
+
+        data = {"tracks":[{"uri":track} for track in tracks]}
+        requests.delete(url=url, headers=headers, json=data)
     else:
         return "no tracks"
 

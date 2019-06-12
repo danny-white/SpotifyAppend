@@ -18,9 +18,9 @@ class Playlist:
         return cls(user, name, tracks, reference)
 
     @classmethod
-    def from_web_api(cls, user, access_token, id, reference):
-        tracks = spio.get_tracks(access_token, id)
-        name = "spotify:playlist:" + id
+    def from_web_api(cls, user, access_token, uri, reference):
+        tracks = spio.get_tracks(access_token, uri)
+        name = uri
         return cls(user, name, tracks, reference)
 
     def __eq__(self, other):
@@ -39,6 +39,7 @@ class Playlist:
     # dumps a playlist (class) to a file, just dumps the playlist and the ref, no updates are done
     def write_out(self):
         # todo messy code, but the only occurrance
+        # also do you need to dump the actual list or just refs?
         if self.reference:
             self.reference.write_out()
             with open_playlist(self.user, self.name, "w") as outfile:
@@ -62,8 +63,8 @@ class Drainlist:
             try:
                 self.add_source_init(name)
             except FileNotFoundError as e:
-                id = e.filename.split(":")[2]
-                self.add_source_api(id)
+                uri = e.filename.split("/")[-1]
+                self.add_source_api(uri)
 
 
     def add_source(self, source_name):
@@ -86,16 +87,28 @@ class Drainlist:
                 templist = Playlist.from_file(self.user, source_file, ref)
         self.sources += [templist]
 
-    def add_source_api(self, id):
-        ref = Playlist.from_web_api(self.user, spio.get_access_token(self.user), id, None)
-        templist = Playlist.from_web_api(self.user, spio.get_access_token(self.user), id, ref)
+    def add_source_api(self, uri):
+        ref = Playlist.from_web_api(self.user, spio.get_access_token(self.user), uri, None)
+        templist = Playlist.from_web_api(self.user, spio.get_access_token(self.user), uri, ref)
 
         templist.write_out()
         ref.write_out()
         self.sources += [templist]
 
+    def populate(self, access_token):
+        tracks = []
+        for source in self.sources:
+            tracks += source.tracks
+        spio.add_tracks_to_drain(access_token, self, tracks)
+
+    def depopulate(self, access_token):
+        tracks = []
+        for source in self.sources:
+            tracks += source.tracks
+        spio.remove_tracks_from_drain(access_token, self, tracks)
 
     def write_out(self):
+        # dumps drainlist and references to disk
         with open_playlist(self.user, self.name, "w+") as outfile:
             json.dump({"Playlist_URI":self.name, "Sources":self.source_names}, outfile)
         for s in self.sources:

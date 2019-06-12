@@ -1,0 +1,1 @@
+Always use fully qualified URI's, if a function needs just an ID then do the stripping at the function level.

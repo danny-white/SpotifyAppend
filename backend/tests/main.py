@@ -9,9 +9,17 @@ import spio
 import playlist
 
 test_user = "Test_User"
-drain_name = "Temp_drain"
-sources = ["4L3PeQ9LzinSq0Q3KnzLvb", "6E2XjEeEOEhUKVoftRHusb"]
-# drainlist_text = 
+# dummy lists
+test_drain = "{\"Playlist_URI\": \"spotify:playlist:test_drain\", \"Sources\": [\"spotify:playlist:test_playlist\", \"spotify:playlist:test_playlist2\"]}"
+test_playlist = "{\"Playlist_URI\": \"spotify:playlist:test_playlist\", \"Track_URIs\": [\"spotify:track:t1\", \"spotify:track:t2\", \"spotify:track:t3\"]}"
+test_playlist_ref = "{\"Playlist_URI\": \"spotify:playlist:test_playlist\", \"Track_URIs\": [\"spotify:track:t1\", \"spotify:track:t2\"]}"
+
+# actual lists for testing
+test_playlist2 = "{\"Playlist_URI\": \"spotify:playlist:4L3PeQ9LzinSq0Q3KnzLvb\", \"Track_URIs\": [\"spotify:track:6koWevx9MqN6efQ6qreIbm\", \"spotify:track:7EE7jbv7Dv8ZkyWBlKhPXX\", \"spotify:track:1zTmKEtaxIqi2ByGBLmI3s\", \"spotify:track:1RjP07A2H4WMmozQidd9x7\", \"spotify:track:0dE9ro91KUtV5Xi7bDPy6b\", \"spotify:track:1UYXdZZMnCrlUqDRuIs9OE\", \"spotify:track:18rXOovmohAMcFwUPAUAN2\", \"spotify:track:3DERgYjztCL6oME2fvRl6z\", \"spotify:track:0TRbihonM8LyyQ7OClspEy\", \"spotify:track:5MbUyUE6erY9mVgXaecQwR\", \"spotify:track:0Mx2W2i58sIPmEvfKdh1Q2\", \"spotify:track:52FCSkVx41xDQ3oCjHIeNJ\", \"spotify:track:7hjJKZwcW0vze3A48dqcCr\", \"spotify:track:08Z3vnfucOMerexVE2RR8w\", \"spotify:track:4FqfG6WnkXEMc6ZZ58lJWb\", \"spotify:track:7Jzr0HLMMvTOo9Xvc8EjZL\", \"spotify:track:3nV9CwvpCHGd9fvJ1pn185\", \"spotify:track:1eueYfJA1ADnfghW90xxxf\", \"spotify:track:4cx6srR6OQzmd6mzpeaQsY\", \"spotify:track:5WwaKGBmg0TpG8mRQpksl2\", \"spotify:track:1wJCpDiJeQccXuNguS8umH\", \"spotify:track:78qM62MHvNxFJLpShqmq28\", \"spotify:track:5EeNRe6Fi29tTrssVzl4dw\", \"spotify:track:3Lr9aRWF57Dd8NsjeWTKNp\", \"spotify:track:1Z5GCYgzsBxb9VUUVQRG2E\", \"spotify:track:74fNA9uOtYFbkpG7gE8AKV\", \"spotify:track:5DQEWQoJ3deYCPkRIFm3Ci\", \"spotify:track:7dYXMe7VAmmkKDyGByUOfM\", \"spotify:track:3ozCQsJ9IA0v3ZlpE21UzK\", \"spotify:track:71CRvX5TW0CsiCxGZ00IfA\"]}"
+test_playlist2_ref = test_playlist2[:]
+test_playlist3 = "{\"Playlist_URI\": \"spotify:playlist:6E2XjEeEOEhUKVoftRHusb\", \"Track_URIs\": [\"spotify:track:2qOm7ukLyHUXWyR4ZWLwxA\", \"spotify:track:4MbV8zrWudQflnbiIzp29t\", \"spotify:track:3MQmQowCMVhepBDEsuBXIm\", \"spotify:track:63BokRfXSQhEU6Qi2dSJpZ\", \"spotify:track:0WKYRFtH6KKbaNWjsxqm70\", \"spotify:track:503OTo2dSqe7qk76rgsbep\", \"spotify:track:2C3QwVE5adFCVsCqayhPW7\", \"spotify:track:2g8HN35AnVGIk7B8yMucww\", \"spotify:track:0HOqINudNgQFpg1le5Hnqe\", \"spotify:track:2Ih217RCGAmyQR68Nn7Cqo\"]}"
+test_playlist3_ref = test_playlist3[:]
+test_drain2 = "{\"Playlist_URI\": \"spotify:playlist:069rrIb9s1MRw2BBwXmeJE\", \"Sources\": [\"spotify:playlist:4L3PeQ9LzinSq0Q3KnzLvb\", \"spotify:playlist:6E2XjEeEOEhUKVoftRHusb\"]}"
 
 class TestSpotifyMethods(unittest.TestCase):
 
@@ -50,7 +58,11 @@ class TestSpotifyMethods(unittest.TestCase):
         os.remove(test_user + "/Playlists/TEST1_ref")
     
     def test_list_drains(self):
+        drain_name = "test_drain"
+        with playlist.open_playlist(test_user, drain_name, "w+") as outfile:
+            outfile.write(test_playlist_ref)
         self.assertEqual(spotify.list_drains(test_user), ["test_drain"])
+        os.remove(test_user + "/Playlists/" + drain_name)
 
     def test_create_new_drain(self):
         new_drainlist = "new_drainlist"
@@ -65,11 +77,19 @@ class TestSpotifyMethods(unittest.TestCase):
 class TestPlaylistMethods(unittest.TestCase):
     refname = "test_playlist_ref"
     listname = "test_playlist"
-    ref, plist = None, None
+
+    with playlist.open_playlist(test_user, refname, "w+") as outfile:
+        outfile.write(test_playlist_ref)
+    with playlist.open_playlist(test_user, listname, "w+") as outfile:
+        outfile.write(test_playlist)
+
     with playlist.open_playlist(test_user, refname, "r") as infile:
         ref = playlist.Playlist.from_file(test_user,infile, None)
     with playlist.open_playlist(test_user, listname, "r") as infile:
         plist = playlist.Playlist.from_file(test_user, infile, ref)
+
+    os.remove(test_user + "/Playlists/" + refname)
+    os.remove(test_user + "/Playlists/" + listname)
     
     def test_sync(self):
         self.assertEqual(self.plist.sync(), ["spotify:track:t3"])
@@ -92,12 +112,27 @@ class TestPlaylistMethods(unittest.TestCase):
         os.remove(test_user + "/Playlists/" + "test2")
         os.remove(test_user + "/Playlists/" + "test2_ref")
 class TestDrainlistMethods(unittest.TestCase):
-    Dlist = None
+    1
+    # Dname = "test_drain"
+    # refname = "test_playlist_ref"
+    # listname = "test_playlist"
+    # with playlist.open_playlist(test_user, refname, "w+") as outfile:
+    #     outfile.write(test_playlist_ref)
+    # with playlist.open_playlist(test_user, listname, "w+") as outfile:
+    #     outfile.write(test_playlist)
+    # with playlist.open_playlist(test_user, Dname, "w+") as outfile:
+    #     outfile.write(test_drain)
+    #
+    # with playlist.open_playlist(test_user, Dname) as infile:
+    #     playlist.Drainlist(test_user, infile)
+
+
+
 # todo the rest of this
-    def setUp(self):
-        with spotify.open_playlist(test_user, "test_drain") as infile:
-            Dlist = playlist.Drainlist(test_user, infile)
-        
+#     def setUp(self):
+#         with spotify.open_playlist(test_user, "test_drain") as infile:
+#             Dlist = playlist.Drainlist(test_user, infile)
+#
 
     # def add_source_init(self):
 
@@ -107,29 +142,74 @@ class TestDrainlistMethods(unittest.TestCase):
 
     # def cleanup(self):
 
+class TestSpioMethdods(unittest.TestCase):
+    1
+#     todo the rest of this
+
 class IntegrationTests(unittest.TestCase):
-    def test_integ_one(self):
-        spotify.initialize()
-        spotify.create_new_drain(test_user, drain_name, sources)
+    drain_name = "spotify:playlist:069rrIb9s1MRw2BBwXmeJE"
+    sources = ["4L3PeQ9LzinSq0Q3KnzLvb", "6E2XjEeEOEhUKVoftRHusb"]
+    tracks = ['spotify:track:6koWevx9MqN6efQ6qreIbm', 'spotify:track:7EE7jbv7Dv8ZkyWBlKhPXX',
+              'spotify:track:1zTmKEtaxIqi2ByGBLmI3s', 'spotify:track:1RjP07A2H4WMmozQidd9x7',
+              'spotify:track:0dE9ro91KUtV5Xi7bDPy6b', 'spotify:track:1UYXdZZMnCrlUqDRuIs9OE',
+              'spotify:track:18rXOovmohAMcFwUPAUAN2', 'spotify:track:3DERgYjztCL6oME2fvRl6z',
+              'spotify:track:0TRbihonM8LyyQ7OClspEy', 'spotify:track:5MbUyUE6erY9mVgXaecQwR',
+              'spotify:track:0Mx2W2i58sIPmEvfKdh1Q2', 'spotify:track:52FCSkVx41xDQ3oCjHIeNJ',
+              'spotify:track:7hjJKZwcW0vze3A48dqcCr', 'spotify:track:08Z3vnfucOMerexVE2RR8w',
+              'spotify:track:4FqfG6WnkXEMc6ZZ58lJWb', 'spotify:track:7Jzr0HLMMvTOo9Xvc8EjZL',
+              'spotify:track:3nV9CwvpCHGd9fvJ1pn185', 'spotify:track:1eueYfJA1ADnfghW90xxxf',
+              'spotify:track:4cx6srR6OQzmd6mzpeaQsY', 'spotify:track:5WwaKGBmg0TpG8mRQpksl2',
+              'spotify:track:1wJCpDiJeQccXuNguS8umH', 'spotify:track:78qM62MHvNxFJLpShqmq28',
+              'spotify:track:5EeNRe6Fi29tTrssVzl4dw', 'spotify:track:3Lr9aRWF57Dd8NsjeWTKNp',
+              'spotify:track:1Z5GCYgzsBxb9VUUVQRG2E', 'spotify:track:74fNA9uOtYFbkpG7gE8AKV',
+              'spotify:track:5DQEWQoJ3deYCPkRIFm3Ci', 'spotify:track:7dYXMe7VAmmkKDyGByUOfM',
+              'spotify:track:3ozCQsJ9IA0v3ZlpE21UzK', 'spotify:track:71CRvX5TW0CsiCxGZ00IfA',
+              'spotify:track:2qOm7ukLyHUXWyR4ZWLwxA', 'spotify:track:4MbV8zrWudQflnbiIzp29t',
+              'spotify:track:3MQmQowCMVhepBDEsuBXIm', 'spotify:track:63BokRfXSQhEU6Qi2dSJpZ',
+              'spotify:track:0WKYRFtH6KKbaNWjsxqm70', 'spotify:track:503OTo2dSqe7qk76rgsbep',
+              'spotify:track:2C3QwVE5adFCVsCqayhPW7', 'spotify:track:2g8HN35AnVGIk7B8yMucww',
+              'spotify:track:0HOqINudNgQFpg1le5Hnqe', 'spotify:track:2Ih217RCGAmyQR68Nn7Cqo']
+    def setUp(self):
+        spotify.create_new_drain(test_user, self.drain_name, self.sources)
+        self.access_token = spio.get_access_token(test_user)
+        with playlist.open_playlist(test_user, self.drain_name) as infile:
+            self.Dlist = playlist.Drainlist(test_user, infile)
 
-        with playlist.open_playlist(test_user, drain_name) as infile:
-            Dlist = playlist.Drainlist(test_user, infile)
-        dropped_track = Dlist.sources[0].reference.tracks.pop()
-        diff = Dlist.sync()
-        self.assertEqual(diff, {dropped_track})
-        Dlist.write_out()
-        diff = Dlist.sync()
-        self.assertEqual(diff, set())
-
-        Dlist.cleanup(test_user)
-        for plist in Dlist.sources:
-            self.assertFalse(os.path.exists(test_user + "/Playlist/" + plist.name))
-
-
-        os.remove("Test_User/Playlists/" + drain_name)
+        if spio.get_tracks(self.access_token, self.Dlist.name):
+            self.Dlist.depopulate(spio.get_access_token(test_user))
+    def tearDown(self):
         for f in os.listdir(test_user + "/Playlists/"):
-            if f.startswith("spotify:playlist:"):
-                os.remove(test_user + "/Playlists/" + f)
+            os.remove(test_user + "/Playlists/" + f)
+
+        if spio.get_tracks(self.access_token, self.Dlist.name):
+            self.Dlist.depopulate(spio.get_access_token(test_user))
+    def test_integ_populate_and_sync(self):
+
+        # drop a track
+        dropped_track = self.Dlist.sources[0].reference.tracks.pop()
+        self.Dlist.sources[0].tracks.remove(dropped_track)
+
+        # populate
+        self.Dlist.populate(self.access_token)
+        tracks = self.tracks[:]
+        tracks.remove(dropped_track)
+        self.assertEqual(set(tracks), set(spio.get_tracks(self.access_token, self.Dlist.name)))
+
+        # re-add the track and sync
+        self.Dlist.sources[0].tracks += [dropped_track]
+        diff = self.Dlist.sync()
+        spio.add_tracks_to_drain(self.access_token, self.Dlist, diff)
+
+        # check if the track was added
+        tracks += [dropped_track]
+        self.assertEqual(set(tracks), set(spio.get_tracks(self.access_token, self.Dlist.name)))
+        # depopulate
+        self.Dlist.depopulate(spio.get_access_token(test_user))
+        self.assertEqual(set(), set(spio.get_tracks(self.access_token, self.Dlist.name)))
+
+        self.Dlist.cleanup(test_user)
+        self.assertEqual(set(os.listdir(test_user + "/Playlists/")), {'spotify:playlist:4L3PeQ9LzinSq0Q3KnzLvb_ref', 'spotify:playlist:069rrIb9s1MRw2BBwXmeJE', 'spotify:playlist:6E2XjEeEOEhUKVoftRHusb_ref'})
+
 
 
 if __name__ == '__main__':
