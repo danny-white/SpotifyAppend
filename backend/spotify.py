@@ -121,30 +121,6 @@ def create_new_drain(user, drainlist, sources):
 ####################################
 
 
-# given a list of sources, download them, get your drainlist, and syncs everything
-# this should be changed to take in a drainlist object
-def do_work(user, source_names, dlist_name):
-    # checks tokens updates if needed
-    # gets all the playlists in the sources, writes them out to disk
-    for plist in spio.get_playlists(access_token):
-        if plist["id"] in source_names:
-            tracklist = spio.get_tracks(access_token, plist["id"])
-            write_out_tracklist(user, plist["name"], plist["uri"], tracklist)
-    
-    # open the requisite drainlist
-    Dlist = 0 
-    with playlist.open_playlist(user, dlist_name, "r") as out:
-        Dlist = playlist.Drainlist(user, out)
-
-    # run the sync program
-    diff = Dlist.sync()
-    # apply the diff to reference lists
-    Dlist.write_out()
-    # add them to the drain playlist
-    spio.add_tracks_to_drain(Dlist, diff)
-    # cleanup the files 
-    Dlist.cleanup(user)
-
 # using the arguments, creates a saved version of the playlist, and 
 # saves a new reference playlist. If a reference already exists, skip
 # this does not user in memory playlist objects, just raw data from Spotify

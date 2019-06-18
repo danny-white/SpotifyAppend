@@ -30,17 +30,6 @@ def get_playlists(access_token):
     except:
         print("unable to acquire playlist list")
 
-#todo dont need this, if you have a playlist uri just get the tracks directly ya dip
-def get_playlist(access_token, uri="spotify:playlist:6E2XjEeEOEhUKVoftRHusb"): #defaults to nursultan bulletakbay
-    id = uri.split(":")[2]
-    url = "https://api.spotify.com/v1/playlists/" + id
-    headers = {"Authorization": "Bearer " + access_token}
-    requests.get(url=url, headers=headers)
-    try:
-        playlist = requests.get(url=url, headers=headers).json()
-        return playlist
-    except:
-        print("unable to acquire playlist")
 
 
 # Takes a playlist id, (not URI) and returns the list of track uri's
@@ -110,10 +99,6 @@ def split_list(tracks, splitsize):
 # changes a list of tracks into a properly formatted uri string for bulk loads
 def generate_uri_string(tracks):
     return "%2C".join(tracks)
-
-
-
-
 
 
 ####################################

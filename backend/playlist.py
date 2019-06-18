@@ -54,7 +54,7 @@ class Drainlist:
         drainlist = json.load(source_file)
         self.user = user
         self.name = drainlist["Playlist_URI"]
-        # these are source names
+        # todo can this be a set?
         self.source_names = list(set(drainlist["Sources"]))
         self.sources = []
 
@@ -66,26 +66,20 @@ class Drainlist:
                 uri = e.filename.split("/")[-1]
                 self.add_source_api(uri)
 
-
-    def add_source(self, source_name):
-        if source_name in self.source_names:
-            return
-        try:
-            with open_playlist(self.user, source_name, "r") as source_file:
-                with open_playlist(self.user, source_name  + "_ref", "r") as ref_file:
-                    ref = Playlist.from_file(self.user, ref_file, None)
-                    templist = Playlist.from_file(self.user, source_file, ref)
-            self.sources += [templist]
-            self.source_names += [i.name for i in [templist]]
-        except:
-            raise Exception("File not found")   
-
     def add_source_init(self, source_name):
         with open_playlist(self.user, source_name, "r") as source_file:
             with open_playlist(self.user, source_name  + "_ref", "r") as ref_file:
                 ref = Playlist.from_file(self.user, ref_file, None)
                 templist = Playlist.from_file(self.user, source_file, ref)
         self.sources += [templist]
+
+    def remove_source(self, source_name):
+        toRem = None
+        for source in self.sources:
+            if source.name == source_name:
+                toRem = source
+        if toRem:
+            self.sources.remove(toRem)
 
     def add_source_api(self, uri):
         ref = Playlist.from_web_api(self.user, spio.get_access_token(self.user), uri, None)

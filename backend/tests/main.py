@@ -21,6 +21,13 @@ test_playlist3 = "{\"Playlist_URI\": \"spotify:playlist:6E2XjEeEOEhUKVoftRHusb\"
 test_playlist3_ref = test_playlist3[:]
 test_drain2 = "{\"Playlist_URI\": \"spotify:playlist:069rrIb9s1MRw2BBwXmeJE\", \"Sources\": [\"spotify:playlist:4L3PeQ9LzinSq0Q3KnzLvb\", \"spotify:playlist:6E2XjEeEOEhUKVoftRHusb\"]}"
 
+dname = "spotify:playlist:069rrIb9s1MRw2BBwXmeJE"
+listname = "spotify:playlist:4L3PeQ9LzinSq0Q3KnzLvb"
+refname = "spotify:playlist:4L3PeQ9LzinSq0Q3KnzLvb_ref"
+
+list2name = "spotify:playlist:6E2XjEeEOEhUKVoftRHusb"
+ref2name = "spotify:playlist:6E2XjEeEOEhUKVoftRHusb_ref"
+
 class TestSpotifyMethods(unittest.TestCase):
 
 # todo unsure how best to do auth code tests
@@ -111,40 +118,145 @@ class TestPlaylistMethods(unittest.TestCase):
 
         os.remove(test_user + "/Playlists/" + "test2")
         os.remove(test_user + "/Playlists/" + "test2_ref")
+
 class TestDrainlistMethods(unittest.TestCase):
-    1
-    # Dname = "test_drain"
-    # refname = "test_playlist_ref"
-    # listname = "test_playlist"
-    # with playlist.open_playlist(test_user, refname, "w+") as outfile:
-    #     outfile.write(test_playlist_ref)
-    # with playlist.open_playlist(test_user, listname, "w+") as outfile:
-    #     outfile.write(test_playlist)
-    # with playlist.open_playlist(test_user, Dname, "w+") as outfile:
-    #     outfile.write(test_drain)
-    #
-    # with playlist.open_playlist(test_user, Dname) as infile:
-    #     playlist.Drainlist(test_user, infile)
+
+    def setUp(self):
+        with playlist.open_playlist(test_user, refname, "w+") as outfile:
+            outfile.write(test_playlist2_ref)
+        with playlist.open_playlist(test_user, listname, "w+") as outfile:
+            outfile.write(test_playlist2)
+        with playlist.open_playlist(test_user, ref2name, "w+") as outfile:
+            outfile.write(test_playlist3_ref)
+        with playlist.open_playlist(test_user, list2name, "w+") as outfile:
+            outfile.write(test_playlist3)
+        with playlist.open_playlist(test_user, dname, "w+") as outfile:
+            outfile.write(test_drain2)
+
+    def tearDown(self):
+        for f in os.listdir(test_user + "/Playlists/"):
+            os.remove(test_user + "/Playlists/" + f)
+
+    def test_add_source_init(self):
+        with playlist.open_playlist(test_user, dname) as infile:
+            d = playlist.Drainlist(test_user, infile)
+        d.remove_source(list2name)
+        d.add_source_init(list2name)
+        self.assertEqual(set([s.name for s in d.sources]), {listname, list2name})
+
+    def test_remove_source(self):
+        with playlist.open_playlist(test_user, dname) as infile:
+            d = playlist.Drainlist(test_user, infile)
+        d.remove_source(list2name)
+        self.assertEqual(set([s.name for s in d.sources]), {listname})
+
+    def add_source_api(self):
+        with playlist.open_playlist(test_user, dname) as infile:
+            d = playlist.Drainlist(test_user, infile)
+        d.remove_source(list2name)
+        d.add_source_init(list2name)
+        self.assertEqual(set([s.name for s in d.sources]), {listname, list2name})
+
+    def test_init(self):
+        with playlist.open_playlist(test_user, dname) as infile:
+            d = playlist.Drainlist(test_user, infile)
+
+        self.assertEqual(d.user, test_user)
+        self.assertEqual(d.name, dname)
+        self.assertEqual(set(d.source_names), {listname, list2name})
+        self.assertEqual({s.name for s in d.sources}, {listname, list2name})
+
+    def test_populate_depopulate(self):
+        with playlist.open_playlist(test_user, dname) as infile:
+            d = playlist.Drainlist(test_user, infile)
+
+        token = spio.get_access_token(test_user)
+        tracks = spio.get_tracks(token, listname) + spio.get_tracks(token, list2name)
+        d.populate(token)
+        self.assertEqual(set(tracks), set(spio.get_tracks(token, d.name)))
+        d.depopulate(token)
+        self.assertEqual(set(), set(spio.get_tracks(token, d.name)))
+
+    def test_write_out(self):
+        with playlist.open_playlist(test_user, dname) as infile:
+            d = playlist.Drainlist(test_user, infile)
+        d.write_out()
+        with playlist.open_playlist(test_user, dname) as infile:
+            data = infile.read()
+        self.assertTrue(listname in data)
+        self.assertTrue(list2name in data)
+        self.assertTrue(dname in data)
 
 
+    def test_sync(self):
+        with playlist.open_playlist(test_user, dname) as infile:
+            d = playlist.Drainlist(test_user, infile)
+        self.assertEqual(set(), d.sync())
 
-# todo the rest of this
-#     def setUp(self):
-#         with spotify.open_playlist(test_user, "test_drain") as infile:
-#             Dlist = playlist.Drainlist(test_user, infile)
-#
 
-    # def add_source_init(self):
+    def test_cleanup(self):
+        with playlist.open_playlist(test_user, dname) as infile:
+            d = playlist.Drainlist(test_user, infile)
+        expected_files = ['spotify:playlist:4L3PeQ9LzinSq0Q3KnzLvb', 'spotify:playlist:6E2XjEeEOEhUKVoftRHusb',
+         'spotify:playlist:4L3PeQ9LzinSq0Q3KnzLvb_ref', 'spotify:playlist:069rrIb9s1MRw2BBwXmeJE',
+         'spotify:playlist:6E2XjEeEOEhUKVoftRHusb_ref']
 
-    # def write_out(self):
+        self.assertEqual(set(os.listdir(test_user + "/Playlists/")), set(expected_files))
+        d.cleanup(test_user)
 
-    # def sync(self):
+        expected_files = ['spotify:playlist:4L3PeQ9LzinSq0Q3KnzLvb_ref', 'spotify:playlist:069rrIb9s1MRw2BBwXmeJE',
+         'spotify:playlist:6E2XjEeEOEhUKVoftRHusb_ref']
 
-    # def cleanup(self):
+        self.assertEqual(set(os.listdir(test_user + "/Playlists/")), set(expected_files))
 
 class TestSpioMethdods(unittest.TestCase):
-    1
-#     todo the rest of this
+    token = spio.get_access_token(test_user)
+
+    def setUp(self):
+        with playlist.open_playlist(test_user, refname, "w+") as outfile:
+            outfile.write(test_playlist2_ref)
+        with playlist.open_playlist(test_user, listname, "w+") as outfile:
+            outfile.write(test_playlist2)
+        with playlist.open_playlist(test_user, ref2name, "w+") as outfile:
+            outfile.write(test_playlist3_ref)
+        with playlist.open_playlist(test_user, list2name, "w+") as outfile:
+            outfile.write(test_playlist3)
+        with playlist.open_playlist(test_user, dname, "w+") as outfile:
+            outfile.write(test_drain2)
+
+    def tearDown(self):
+        for f in os.listdir(test_user + "/Playlists/"):
+            os.remove(test_user + "/Playlists/" + f)
+
+
+    def test_get_playlists(self):
+        lists = spio.get_playlists(self.token)
+        self.assertTrue(listname in [plist["uri"] for plist in lists])
+        self.assertTrue(list2name in [plist["uri"] for plist in lists])
+        self.assertTrue(dname in [plist["uri"] for plist in lists])
+
+    def test_get_tracks(self):
+        # since playlist is volatile just check if one track is in there
+        tracks = spio.get_tracks(self.token, listname)
+        self.assertTrue("spotify:track:7EE7jbv7Dv8ZkyWBlKhPXX" in tracks)
+
+    def test_add_remove_tracks_to_from_drain(self):
+        with playlist.open_playlist(test_user, dname) as infile:
+            d = playlist.Drainlist(test_user, infile)
+        dump_tracks = ["spotify:track:7EE7jbv7Dv8ZkyWBlKhPXX"]
+        spio.add_tracks_to_drain(self.token, d, dump_tracks)
+        tracks = spio.get_tracks(self.token, d.name)
+        self.assertEqual(tracks, dump_tracks)
+        spio.remove_tracks_from_drain(self.token, d, dump_tracks)
+        spio.get_tracks(self.token, d.name)
+        tracks = spio.get_tracks(self.token, d.name)
+        self.assertEqual(tracks, [])
+
+
+    def test_remove_tracks_from_drain(self):
+        1
+#     todo also token code
+
 
 class IntegrationTests(unittest.TestCase):
     drain_name = "spotify:playlist:069rrIb9s1MRw2BBwXmeJE"
