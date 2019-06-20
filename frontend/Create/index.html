@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<title>W3.CSS Template</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<link rel="stylesheet" href="../w3.css">
+<link rel="stylesheet" href="../w3-theme-black.css">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.3.0/css/font-awesome.min.css">
+<body>
+
+<!-- Header -->
+<header class="w3-container w3-theme w3-padding" id="myHeader">
+  
+  <br>
+
+  <div class="w3-center">
+  <h4>BEAUTIFUL RESPONSIVE WEB SITES</h4>
+  <h1 class="w3-xxxlarge">BUILT WITH W3.CSS</h1>
+  </div>
+</header>
+
+<div class="w3-row-padding w3-center w3-margin-top">
+
+  <div class="w3-card w3-container" style="min-height:450px">
+  <h2>Create New Sourced Playlist</h2><br>
+      <div class="w3-container">
+        <input id= "sourcedName" class="w3-input w3-border w3-margin-right" type="text" placeholder="Playlist Name" onkeyup="if (event.keyCode == 13) {collectHighlighted()}">
+      </div>
+      
+    <hr>
+
+    <h4>Select Source Playlists</h4>
+    <div class="w3-container">
+      <input type="text" id="listSearch" onkeyup="search(this.value)" class="w3-input w3-border " placeholder="Search">
+    </div>
+
+
+    <ul class="w3-ul" id="theList">
+        
+      </ul>
+
+      <button class = "w3-btn w3-margin w3-xlarge w3-black" onclick="collectHighlighted()">Submit</button>
+  </div>
+</div>
+<br>
+
+<!-- Footer -->
+<footer class="w3-container w3-theme-dark w3-padding-16 ">
+  <p>Powered by <a href="https://www.w3schools.com/w3css/default.asp" target="_blank">w3.css</a></p>
+  <p>Check out my  <a href="w3css_references.asp" class="w3-btn w3-theme-light" target="_blank">Github</a></p>
+</footer>
+
+</body>
+
+<script type="text/javascript">
+  var nameToUri 
+  function updatePlaylists(){
+    // get a better user delineation method
+    // user = window.prompt("what is your username")
+    user = "Danny"
+
+    // testing
+    if (!user.includes("Danny")){
+      user = "Danny"
+    }
+
+    var rule = "onclick=\"this.style.color = this.style.color == \'red\' ? \'black\' : \'red\'\" style=\"cursor: pointer\""
+
+
+    var url= "http://127.0.0.1:5000/list_drains"
+    url = url + "?user=" + user
+    var xmlhttp = new XMLHttpRequest();
+    
+    xmlhttp.onreadystatechange = function() {
+
+      if (this.readyState == 4 && this.status == 200) {
+         plists = JSON.parse(xmlhttp.responseText)
+         document.getElementById('theList').innerHTML = ""
+         for (let i = 0; i < plists.length; i++) {
+
+           document.getElementById('theList').innerHTML += ('<li ' + rule +  '>' + plists[i]["name"] + '</li>');
+         }
+         nameToUri = listToMap(plists)
+
+      }
+    };
+
+    xmlhttp.open("GET", url, true);
+    xmlhttp.send();   
+  }
+  function listToMap(lst){
+    m = new Map()
+    for (var i = 0; i < lst.length; i++) {
+      m[lst[i]["name"]] = lst[i]["uri"]
+    }
+    return m
+  }
+
+  function search(searchString){
+    // todo this is garbage, but makes it look decent
+    window.scrollTo(0,146)
+    searchString = searchString.toUpperCase()
+    var ul = document.getElementById("theList");
+    var li = ul.getElementsByTagName("li");
+    
+    for (var i = 0; i < li.length; i++) {
+      if (li[i].textContent.toUpperCase().includes(searchString)){
+        li[i].style.display = "";
+      }
+      else {
+        li[i].style.display = "none";
+      }
+    }
+  }
+
+  function collectHighlighted(){
+    var arr = []
+    var ul = document.getElementById("theList");
+    var li = ul.getElementsByTagName("li");
+    
+    for (var i = 0; i < li.length; i++) {
+      if (li[i].style.color === "red"){
+        arr.push(nameToUri[li[i].textContent])
+      }
+      
+    }
+    var name = document.getElementById("sourcedName").value
+    console.log(arr)
+    console.log(name)
+
+    // return arr
+  }
+
+updatePlaylists()
+
+
+</script>
+</html>
+
+

@@ -92,7 +92,10 @@ def signed_in():
 # Takes drains and formats them to be sent to the frontend
 @app.route("/list_drains")
 def list_drains_request():
-    resp = app.make_response(json.dumps({"this": "that", "These":"Those"}))
+    user = request.args["user"]
+    lists = spio.get_playlists(spio.get_access_token(user))
+    resp = app.make_response(json.dumps([{"name": l["name"], "uri": l["uri"]} for l in lists]))
+    resp.headers['Access-Control-Allow-Origin'] = '*'
     return resp
 
 # Collects all drains associated with a user
