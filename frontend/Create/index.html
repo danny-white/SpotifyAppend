@@ -69,7 +69,7 @@
     var rule = "onclick=\"this.style.color = this.style.color == \'red\' ? \'black\' : \'red\'\" style=\"cursor: pointer\""
 
 
-    var url= "http://127.0.0.1:5000/list_drains"
+    var url= "http://127.0.0.1:5000/list_playlists"
     url = url + "?user=" + user
     var xmlhttp = new XMLHttpRequest();
     
@@ -130,8 +130,27 @@
     console.log(arr)
     console.log(name)
 
-    // return arr
+    for (var i = 0; i < li.length; i++) {
+      li[i].style.color = "black"
+    }
+
+    document.getElementById("sourcedName").value = ""
+    createNewDrain(name, arr)
   }
+
+  function createNewDrain(name, sources){
+    user = "Danny"
+    var url= "http://127.0.0.1:5000/new_drain"
+    var xmlhttp = new XMLHttpRequest();
+    xmlhttp.open("POST", url, true);
+    xmlhttp.setRequestHeader('Content-Type', 'application/json');
+    xmlhttp.send(JSON.stringify({"user": user, "drainlist":name, "sources":sources}));
+    // xmlhttp.send();
+
+  }
+
+
+   
 
 updatePlaylists()
 

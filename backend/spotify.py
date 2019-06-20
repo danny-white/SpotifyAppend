@@ -7,12 +7,15 @@ import time
 import playlist, spio
 import io
 import os
+from flask_cors import CORS
+
 
 ####################################
 ######## Set up Constants ##########  
 ####################################
 
 app = Flask(__name__)
+CORS(app)
 cwd = "/Users/Danny/Documents/CS/SpotifyAppend/backend"
 
 # hacky test global thing, will remove later once the frontend is properly attached 
@@ -90,7 +93,7 @@ def signed_in():
 ####################################
 
 # Takes drains and formats them to be sent to the frontend
-@app.route("/list_drains")
+@app.route("/list_playlists")
 def list_drains_request():
     user = request.args["user"]
     lists = spio.get_playlists(spio.get_access_token(user))
@@ -103,16 +106,37 @@ def list_drains(user):
     return [filename for filename in os.listdir(os.getcwd()+ "/" + user + "/Playlists") if filename.endswith("_drain")]
 
 # Takes new drainlist data and formats to be sent to frontend
-@app.route("/new_drain")
+@app.route("/new_drain", methods = ["GET", "POST", "OPTIONS"])
 def create_new_drain_request():
-    ret = create_new_drain(request.args["drainlist"], request.args["sources"])
-    return app.make_response(ret)
+    # todo this should work fine with renaming of args as needed
+    if request.method == "OPTIONS":
+        print(1)
+        resp = app.make_response(json.dumps([{"name":"nope"}]))
+        resp.headers['Access-Control-Allow-Origin'] = '*'
+        resp.headers["Access-Control-Allow-Headers"] = "*"
+        return resp
+    if request.method == "POST":
+        data = request.data.decode("utf-8")
+        data = json.loads(data)
+        ret = create_new_drain_from_name(data["user"] ,data["drainlist"], data["sources"])
+        print(data)
+        return app.make_response(ret)
     # return proper JSON here
+
+def create_new_drain_from_name(user, dlistName, sources):
+    # create new playlist with given name, get the URI and proceed
+    spio.create_playlists(spio.get_access_token(user), dlistName)
+    drainlist = ""
+    return create_new_drain(user, drainlist, sources)
 
 # creates a new drainlist
 # args: drainlist = new name from drainlist (will overwrite old ones)
 #       sources = list of playlist URI's 
 def create_new_drain(user, drainlist, sources):
+    # drainlist is assumed to not exist,
+    # therefore when a name is given, create
+    # a new playlist with given name, get URI
+    # and proceed
     if "spotify:playlist:" not in sources[0]:
         sources = ["spotify:playlist:" + source for source in sources]
     with playlist.open_playlist(user, drainlist, "w+") as dfile:

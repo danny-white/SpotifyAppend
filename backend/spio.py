@@ -23,12 +23,19 @@ client_secret= sec[1]
 def get_playlists(access_token):
     url = "https://api.spotify.com/v1/me/playlists"
     headers = {"Authorization": "Bearer " + access_token}
-    requests.get(url=url, headers=headers) 
+    requests.get(url=url, headers=headers)
     try:
         all_playlists = requests.get(url=url, headers=headers).json()
         return all_playlists["items"]
     except:
         print("unable to acquire playlist list")
+
+def create_playlists(access_token, name):
+    # works, now get the URI
+    url = "https://api.spotify.com/v1/me/playlists"
+    headers = {"Authorization": "Bearer " + access_token}
+    r = requests.post(url=url, data=json.dumps({"name":name}), headers=headers)
+    return r
 
 
 

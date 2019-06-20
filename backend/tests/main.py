@@ -80,6 +80,10 @@ class TestSpotifyMethods(unittest.TestCase):
                 self.assertTrue(all([plist in line for plist in playlist_uris]))
         os.remove(test_user + "/Playlists/new_drainlist")
 
+
+
+
+
     # write Drainlist and Playlist class tests
 class TestPlaylistMethods(unittest.TestCase):
     refname = "test_playlist_ref"
@@ -252,6 +256,9 @@ class TestSpioMethdods(unittest.TestCase):
         tracks = spio.get_tracks(self.token, d.name)
         self.assertEqual(tracks, [])
 
+    def test_create_playlist(self):
+        spio.create_playlists(spio.get_access_token(test_user), "test")
+        print(1)
 
     def test_remove_tracks_from_drain(self):
         1
@@ -322,6 +329,11 @@ class IntegrationTests(unittest.TestCase):
         self.Dlist.cleanup(test_user)
         self.assertEqual(set(os.listdir(test_user + "/Playlists/")), {'spotify:playlist:4L3PeQ9LzinSq0Q3KnzLvb_ref', 'spotify:playlist:069rrIb9s1MRw2BBwXmeJE', 'spotify:playlist:6E2XjEeEOEhUKVoftRHusb_ref'})
 
+class WebRequestTests(unittest.TestCase):
+    # todo this class will test entire behavior for frontend entrypoints
+    # take in plaintext representing the request data and proceed from there,
+    # piggybacks on the rest of the methods working
+    1
 
 
 if __name__ == '__main__':
