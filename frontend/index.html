@@ -47,6 +47,12 @@
 </div>
 
 <br>
+<div class = "w3-center">
+  <button class="w3-btn w3-black" onclick="refresh()">REFRESH</button>
+</div>
+
+
+<br>
 
 <!-- Footer -->
 <footer class="w3-container w3-theme-dark w3-padding-16 ">
@@ -55,4 +61,18 @@
 </footer>
 
 </body>
+
+<script type="text/javascript">
+  function refresh(){
+    user = "Danny"
+    var url= "http://127.0.0.1:5000/refresh"
+    url = url + "?user=" + user
+    var xmlhttp = new XMLHttpRequest();
+    xmlhttp.open("GET", url, true);
+    
+    
+    xmlhttp.send();
+
+  }
+</script>
 </html>

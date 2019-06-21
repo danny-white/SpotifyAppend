@@ -201,8 +201,6 @@ class Drainlist:
         for source in self.sources:
             filename = user + "/"  "Playlists" + "/" + source.name
             os.remove(filename)
-
-
             
 def open_playlist(user, playlist_name, flag = "r"):
     return open(user + "/Playlists/" + playlist_name, flag)
