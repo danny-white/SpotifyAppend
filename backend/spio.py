@@ -17,10 +17,12 @@ client_secret= sec[1]
 ####################################
 
 
-# get's a list of playlists for the current user
-# todo you can remove this, and instead source based 
-# on the names in the drainlist
 def get_playlists(access_token):
+    """
+    Returns the playlists followed by a user
+    :param access_token: determines the user to edit securely
+    :return: all playlists followed by the user (list of dictionaries)
+    """
     url = "https://api.spotify.com/v1/me/playlists"
     headers = {"Authorization": "Bearer " + access_token}
     requests.get(url=url, headers=headers)
@@ -31,16 +33,37 @@ def get_playlists(access_token):
         print("unable to acquire playlist list")
 
 def create_playlists(access_token, name):
-    # works, now get the URI
+    """
+    Creates a new playlist for the user to follow
+    :param access_token: securely determines the user
+    :param name: name for the new playlist
+    :return: URI of the newly generated playlist
+    """
     url = "https://api.spotify.com/v1/me/playlists"
     headers = {"Authorization": "Bearer " + access_token}
-    r = requests.post(url=url, data=json.dumps({"name":name}), headers=headers)
-    return r
+    resp = requests.post(url=url, data=json.dumps({"name":name}), headers=headers)
+    r = json.loads(resp.text)
+    return r["uri"]
 
+def remove_playlist(access_token, uri):
+    """
+    unfollows one the user's playlist with the given URI
+    :param access_token: securely determines the user
+    :param uri: Idenifies the playlist to be deleted
+    :return: Boolean of success
+    """
+    id = uri.split(":")[2]
+    url = "https://api.spotify.com/v1/playlists/" + id + "/followers"
+    headers = {"Authorization": "Bearer " + access_token}
+    resp = requests.delete(url=url, headers=headers)
+    return resp.status_code == 200
 
-
-# Takes a playlist id, (not URI) and returns the list of track uri's
-def get_tracks(access_token, uri="spotify:playlist:6E2XjEeEOEhUKVoftRHusb"):
+def get_tracks(access_token, uri):
+    """
+    gets the tracks from a user's playlist (public or private)
+    :param access_token: securely ID's the user
+    :return: returns a list of all track URI's
+    """
     playlist_id = uri.split(":")[2]
     ret = []
     url = "https://api.spotify.com/v1/playlists/" + playlist_id + "/tracks"
@@ -54,10 +77,14 @@ def get_tracks(access_token, uri="spotify:playlist:6E2XjEeEOEhUKVoftRHusb"):
         url = jsonTrack["next"]
     return ret
 
-# takes a list of tracks and a drainlist object and appends the tracks to the drainlist
-# args: drainlist = drainlist object that is having tracks added
-#       tracks = tracks to be added in a list
 def add_tracks_to_drain(access_token, drainlist, tracks):
+    """
+    Takes a list of tracks and a drainlist URI and appends the tracks to the drainlist
+    :param access_token: Securely ID's User
+    :param drainlist: drainlist sink URI
+    :param tracks: list of track URI's to be added to the list
+    :return:
+    """
     track_list = split_list(tracks, 100)
     # if there are no tracks this is still an empty list, iterate through split list and upload
     id = drainlist.name.split(":")[2]
@@ -66,10 +93,15 @@ def add_tracks_to_drain(access_token, drainlist, tracks):
         url = "https://api.spotify.com/v1/playlists/%s/tracks?uris=%s" % (id, trackstring)
         headers = {"Authorization": "Bearer " + access_token}
         requests.post(url=url, headers=headers)
-    else:
-        return "no tracks"
 
 def remove_tracks_from_drain(access_token, drainlist, tracks):
+    """
+    Takes a list of tracks and a drainlist URI and removes the tracks from the drainlist
+    :param access_token: Securely ID's User
+    :param drainlist: drainlist sink URI
+    :param tracks: list of track URI's to be removed from the list
+    :return:
+    """
     id = drainlist.name.split(":")[2]
     track_list = split_list(tracks, 100)
     for tracks in track_list:
@@ -90,9 +122,16 @@ def remove_tracks_from_drain(access_token, drainlist, tracks):
 ########### Utilities  #############
 ####################################
 
-# splits a list into sublists of len splitsize, last sublist may be smaller if
-# not enough elements are present (no padding)
+
 def split_list(tracks, splitsize):
+    """
+    Splits a list of tracks into sublists smaller than splitsize
+    splitting is greedy, tracks are split into splitsize chunks
+    until fewer than splitsize remain resulting in a smaller final sublist
+    :param tracks: list of tracks URI's
+    :param splitsize: max size of the returned sublists
+    :return: list of lists of tracks
+    """
     tracks =  list(tracks)
     end = splitsize
     ret = []
@@ -103,8 +142,12 @@ def split_list(tracks, splitsize):
         end = min(len(tracks), end + splitsize)
     return ret
 
-# changes a list of tracks into a properly formatted uri string for bulk loads
 def generate_uri_string(tracks):
+    """
+    changes a list of tracks into a properly formatted uri string for bulk loads
+    :param tracks: list of tracks URI's
+    :return: a formatted string to be used in HTTP requests
+    """
     return "%2C".join(tracks)
 
 
@@ -117,6 +160,11 @@ def generate_uri_string(tracks):
 # backend Token code =/= frontend token code, for the backend if the tokens are hosed
 # just give up and cry
 def get_tokens_from_code(code):
+    """
+    Interim function, takes a "code" returned from the spotify auth API and acquires the users tokens
+    :param code: auth string from Spotify API
+    :return: POSTs the code and returns the response, containing the tokens
+    """
     url = "https://accounts.spotify.com/api/token/"
     params = {"grant_type" :"authorization_code", "code" : code, "redirect_uri":myUrl + "authentication_return"}
     headers = make_authorization_headers(client_id, client_secret)

@@ -145,7 +145,7 @@ class TestDrainlistMethods(unittest.TestCase):
         with playlist.open_playlist(test_user, dname) as infile:
             d = playlist.Drainlist(test_user, infile)
         d.remove_source(list2name)
-        d.add_source_init(list2name)
+        d.add_source_file(list2name)
         self.assertEqual(set([s.name for s in d.sources]), {listname, list2name})
 
     def test_remove_source(self):
@@ -158,7 +158,7 @@ class TestDrainlistMethods(unittest.TestCase):
         with playlist.open_playlist(test_user, dname) as infile:
             d = playlist.Drainlist(test_user, infile)
         d.remove_source(list2name)
-        d.add_source_init(list2name)
+        d.add_source_file(list2name)
         self.assertEqual(set([s.name for s in d.sources]), {listname, list2name})
 
     def test_init(self):
@@ -256,9 +256,14 @@ class TestSpioMethdods(unittest.TestCase):
         tracks = spio.get_tracks(self.token, d.name)
         self.assertEqual(tracks, [])
 
-    def test_create_playlist(self):
-        spio.create_playlists(spio.get_access_token(test_user), "test")
-        print(1)
+    def test_create_and_delete_playlist(self):
+        token = spio.get_access_token(test_user)
+        uri = spio.create_playlists(token, "test")
+        plists = spio.get_playlists(token)
+        self.assertTrue(uri in [pl["uri"] for pl in plists])
+        spio.remove_playlist(token, uri)
+        plists = spio.get_playlists(token)
+        self.assertFalse(uri in [pl["uri"] for pl in plists])
 
     def test_remove_tracks_from_drain(self):
         1

@@ -92,7 +92,7 @@ def signed_in():
 ######## Interactive Code ##########
 ####################################
 
-# Takes drains and formats them to be sent to the frontend
+# Takes playlists owned by the user and formats them to be sent to the frontend
 @app.route("/list_playlists")
 def list_drains_request():
     user = request.args["user"]
@@ -105,12 +105,10 @@ def list_drains_request():
 def list_drains(user):
     return [filename for filename in os.listdir(os.getcwd()+ "/" + user + "/Playlists") if filename.endswith("_drain")]
 
-# Takes new drainlist data and formats to be sent to frontend
+# Takes new drainlist data, generates the proper drainlist (creating a playlist to serve as the sink)
 @app.route("/new_drain", methods = ["GET", "POST", "OPTIONS"])
 def create_new_drain_request():
-    # todo this should work fine with renaming of args as needed
     if request.method == "OPTIONS":
-        print(1)
         resp = app.make_response(json.dumps([{"name":"nope"}]))
         resp.headers['Access-Control-Allow-Origin'] = '*'
         resp.headers["Access-Control-Allow-Headers"] = "*"
@@ -119,28 +117,41 @@ def create_new_drain_request():
         data = request.data.decode("utf-8")
         data = json.loads(data)
         ret = create_new_drain_from_name(data["user"] ,data["drainlist"], data["sources"])
-        print(data)
         return app.make_response(ret)
     # return proper JSON here
 
 def create_new_drain_from_name(user, dlistName, sources):
+    """
+    Given a name (non-URI) this creates a new sink playlist and sets up the URI work as expected
+    :param user: User owning the Drainlist
+    :param dlistName: name for the sink playlist (Spotify Name)
+    :param sources: sources to be associated with the new Drainlist
+    :return:
+    todo prevent name collisions
+    """
     # create new playlist with given name, get the URI and proceed
-    spio.create_playlists(spio.get_access_token(user), dlistName)
-    drainlist = ""
-    return create_new_drain(user, drainlist, sources)
+    uri = spio.create_playlists(spio.get_access_token(user), dlistName)
+    return create_new_drain(user, uri, sources)
 
-# creates a new drainlist
-# args: drainlist = new name from drainlist (will overwrite old ones)
-#       sources = list of playlist URI's 
 def create_new_drain(user, drainlist, sources):
-    # drainlist is assumed to not exist,
-    # therefore when a name is given, create
-    # a new playlist with given name, get URI
-    # and proceed
+    """
+    Creates a new drainlist
+    :param user: User owning the Drainlist
+    :param drainlist: Name for new Drainlist (should be a URI)
+    :param sources: list of sources to associate with the new drain
+    :return: the contents of the file as a string
+    """
     if "spotify:playlist:" not in sources[0]:
         sources = ["spotify:playlist:" + source for source in sources]
     with playlist.open_playlist(user, drainlist, "w+") as dfile:
         json.dump({"Playlist_URI": drainlist, "Sources": sources}, dfile)
+
+    with playlist.open_playlist(user, drainlist) as dfile:
+        dlist = playlist.Drainlist(user, dfile)
+
+    dlist.populate(spio.get_access_token(user))
+    dlist.cleanup(user)
+
     return json.dumps({"Playlist_URI": drainlist, "Sources": sources})
 
 ####################################
@@ -166,7 +177,58 @@ def write_out_tracklist(user, playlist_name, playlist_uri, tracklist):
             json.dump({"Playlist_URI":playlist_uri, "Track_URIs":tracklist}, outfile)
 
 
+# init is called on the creation of the drainlist in order to
+def init(user, token, uri):
+    # this is a good "first time" create call
+    user = "Danny"
+    token = spio.get_access_token(user)
+    uri = "spotify:playlist:7JKJu29UJtFdqaQSCLwXS5"
+    with playlist.open_playlist(user, uri) as infile:
+        d = playlist.Drainlist(user, infile)
+    d.populate(token)
+    d.cleanup(user)
 
+def refresh(user, token, uri):
+    # this is a complete refresh / update call
+    with playlist.open_playlist(user, uri) as infile:
+        d = playlist.Drainlist(user, infile)
 
+    diff = d.sync()
+    d.write_out()
+    spio.add_tracks_to_drain(token, d, diff)
+    d.cleanup(user)
+
+def info():
+    user = "Danny"
+    token = spio.get_access_token(user)
+    uri = "spotify:playlist:7JKJu29UJtFdqaQSCLwXS5"
+    l = spio.get_playlists(token)
+    pl = ["spotify:playlist:6E2XjEeEOEhUKVoftRHusb", "spotify:playlist:6r5x02GGgeBc1IUjgARWEP"]
+    spinf()
+    for p in l:
+        if p["uri"] in pl:
+            print(p["name"])
+def spinf():
+    pl = ["spotify:playlist:6E2XjEeEOEhUKVoftRHusb", "spotify:playlist:6r5x02GGgeBc1IUjgARWEP"]
+    for p in pl:
+        with playlist.open_playlist(user, p + "_ref") as infile:
+            print(infile.read().count("track"))
+user = "Danny"
+token = spio.get_access_token(user)
+u = ["spotify:playlist:16wE0quJ4wHXGaY78MZikr", "spotify:playlist:0FMPIrKYN6hIEH54FyZ1oa"]
+
+# info()
+# init(user, token, uri)
+# for uri in u:
+#     refresh(user, token, uri)
+#
+
+# calls of the form
+    # a()
+    # refresh()
+    # refresh()
+    # refresh()
+    # ...
+# represent the lifecycle of a given drainlist
 
 

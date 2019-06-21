@@ -5,13 +5,27 @@ import spio
 
 class Playlist:
     def __init__(self, user, name, tracks, reference):
+        """
+        Creates a new Playlist object
+        :param user: Associated user for this Playlist
+        :param name: The Name of the playlist (a URI currently)
+        :param tracks: The tracks of this Playlist
+        :param reference: The reference playlist Object (None if this is a reference)
+        """
         self.user = user
-        self.name = name #name and URI are the same currently 
+        self.name = name
         self.tracks = tracks
         self.reference = reference
 
     @classmethod
     def from_file(cls, user, source_file, reference):
+        """
+        Generates a playlist object from a dumped file
+        :param user: Associated user
+        :param source_file: File to load the Playlist from
+        :param reference: The reference playlist Object (None if this is a reference)
+        :return: The newly constructed Playlist object
+        """
         playlist = json.load(source_file)
         name = playlist["Playlist_URI"]
         tracks = playlist["Track_URIs"]
@@ -19,6 +33,14 @@ class Playlist:
 
     @classmethod
     def from_web_api(cls, user, access_token, uri, reference):
+        """
+        Generates a playlist object from a dumped file
+        :param user: Associated user
+        :param access_token:
+        :param uri: the URI corresponding to the playlist
+        :param reference: The reference playlist Object (None if this is a reference)
+        :return: The newly constructed Playlist object
+        """
         tracks = spio.get_tracks(access_token, uri)
         name = uri
         return cls(user, name, tracks, reference)
@@ -32,14 +54,20 @@ class Playlist:
             return self.name == other.name and self.tracks == other.tracks
 
     def sync(self):
+        """
+        syncs a Playlist with its reference, adding any new track URI's to the reference
+        :return: the URI's of all tracks in the Playlist that were not in the reference
+        """
         diff = [i for i in self.tracks if i not in self.reference.tracks]
         self.reference.tracks += diff
         return diff
     
-    # dumps a playlist (class) to a file, just dumps the playlist and the ref, no updates are done
     def write_out(self):
+        """
+        Dumps a playlist object to a file, along with the reference
+        :return: None
+        """
         # todo messy code, but the only occurrance
-        # also do you need to dump the actual list or just refs?
         if self.reference:
             self.reference.write_out()
             with open_playlist(self.user, self.name, "w") as outfile:
@@ -51,6 +79,11 @@ class Playlist:
 
 class Drainlist:
     def __init__(self, user, source_file):
+        """
+        Generates a new Drainlist object for the given user
+        :param user: Associated user
+        :param source_file: File Drainlist is loaded from
+        """
         drainlist = json.load(source_file)
         self.user = user
         self.name = drainlist["Playlist_URI"]
@@ -61,12 +94,18 @@ class Drainlist:
         # if there are named sources add the proper playlist objects
         for name in self.source_names:
             try:
-                self.add_source_init(name)
+                self.add_source_file(name)
             except FileNotFoundError as e:
                 uri = e.filename.split("/")[-1]
                 self.add_source_api(uri)
 
-    def add_source_init(self, source_name):
+    def add_source_file(self, source_name):
+        """
+        Adds a new Playlist source to a drainlist by filename (Playlist URI)
+        fails if source and reference files do not exist
+        :param source_name: Playlist filename (Playlist URI)
+        :return: None
+        """
         with open_playlist(self.user, source_name, "r") as source_file:
             with open_playlist(self.user, source_name  + "_ref", "r") as ref_file:
                 ref = Playlist.from_file(self.user, ref_file, None)
@@ -74,6 +113,11 @@ class Drainlist:
         self.sources += [templist]
 
     def remove_source(self, source_name):
+        """
+        Removes all Source from the Drainlist that match the given name
+        :param source_name: Name of Source PLaylists to remove (one name, but can remove multiple)
+        :return: None
+        """
         toRem = None
         for source in self.sources:
             if source.name == source_name:
@@ -82,7 +126,17 @@ class Drainlist:
             self.sources.remove(toRem)
 
     def add_source_api(self, uri):
-        ref = Playlist.from_web_api(self.user, spio.get_access_token(self.user), uri, None)
+        """
+        Adds a new Playlist source to a drainlist via the API using the Playlist URI
+        :param uri: URI of the playlist to be added
+        :return: None
+        """
+        # here if source file does not exist, but still
+        try:
+            refFile = open_playlist(self.user, uri + "_ref")
+            ref = Playlist.from_file(self.user, refFile, None)
+        except Exception as e:
+            ref = Playlist.from_web_api(self.user, spio.get_access_token(self.user), uri, None)
         templist = Playlist.from_web_api(self.user, spio.get_access_token(self.user), uri, ref)
 
         templist.write_out()
@@ -90,32 +144,60 @@ class Drainlist:
         self.sources += [templist]
 
     def populate(self, access_token):
+        """
+        Adds one of each track (uniquely) in every source to the drainlist sink on Spotify
+        it will not add tracks already on the playlist
+        This should only be done on startup in order to skip the ref stage, can remove later
+        :param access_token: Securely ID's the user
+        :return: None
+        """
         tracks = []
         for source in self.sources:
             tracks += source.tracks
-        spio.add_tracks_to_drain(access_token, self, tracks)
+        tracks = list(set(tracks) - set(spio.get_tracks(access_token, self.name)))
+        spio.add_tracks_to_drain(access_token, self, list(set(tracks)))
 
     def depopulate(self, access_token):
+        """
+        Deletes all tracks from the drainlist sink on spotify
+        :param access_token: Securely ID's the user
+        :return: None
+        """
         tracks = []
         for source in self.sources:
-            tracks += source.tracks
+            tracks += set(source.tracks)
         spio.remove_tracks_from_drain(access_token, self, tracks)
 
     def write_out(self):
-        # dumps drainlist and references to disk
+        """
+        Dumps drainlist all sources and all references to disk
+        :return: None
+        """
         with open_playlist(self.user, self.name, "w+") as outfile:
             json.dump({"Playlist_URI":self.name, "Sources":self.source_names}, outfile)
         for s in self.sources:
             s.reference.write_out()
     
-    # checks all sources for any songs to add, it then returns them and updates the references
+
     def sync(self):
+        """
+        Syncs all sources, leaving references updated to include new Tracks
+        returns new tracks (to be uploaded immediately after)
+        :return: list of Track uri's returned by each sources syncing
+        """
         diff = set()
         for source in self.sources:
             [diff.add(i) for i in source.sync()]
         return diff
 
     def cleanup(self, user):
+        """
+        Deletes written out source files, references are all that is stored long term
+        this should be changed to allow for direct comparison from in memory plists against
+        file references
+        :param user:
+        :return:
+        """
         for source in self.sources:
             filename = user + "/"  "Playlists" + "/" + source.name
             os.remove(filename)
