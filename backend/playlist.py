@@ -4,7 +4,7 @@ import spio
 
 
 class Playlist:
-    def __init__(self, user, name, tracks, reference):
+    def __init__(self, user, name, uri, tracks, reference):
         """
         Creates a new Playlist object
         :param user: Associated user for this Playlist
@@ -14,6 +14,7 @@ class Playlist:
         """
         self.user = user
         self.name = name
+        self.uri = uri
         self.tracks = tracks
         self.reference = reference
 
@@ -27,9 +28,10 @@ class Playlist:
         :return: The newly constructed Playlist object
         """
         playlist = json.load(source_file)
-        name = playlist["Playlist_URI"]
+        uri = playlist["Playlist_URI"]
+        name = playlist["Name"]
         tracks = playlist["Track_URIs"]
-        return cls(user, name, tracks, reference)
+        return cls(user, name, uri, tracks, reference)
 
     @classmethod
     def from_web_api(cls, user, access_token, uri, reference):
@@ -42,8 +44,8 @@ class Playlist:
         :return: The newly constructed Playlist object
         """
         tracks = spio.get_tracks(access_token, uri)
-        name = uri
-        return cls(user, name, tracks, reference)
+        name = spio.get_name(access_token, uri)
+        return cls(user, name, uri, tracks, reference)
 
     def __eq__(self, other):
         if self is None and other is None:
@@ -51,7 +53,7 @@ class Playlist:
         elif self is None or other is None:
             return False
         else:
-            return self.name == other.name and self.tracks == other.tracks
+            return self.uri == other.uri and self.tracks == other.tracks
 
     def sync(self):
         """
@@ -70,11 +72,11 @@ class Playlist:
         # todo messy code, but the only occurrance
         if self.reference:
             self.reference.write_out()
-            with open_playlist(self.user, self.name, "w") as outfile:
-                json.dump({"Playlist_URI":self.name, "Track_URIs":self.tracks}, outfile)
+            with open_playlist(self.user, self.uri, "w") as outfile:
+                json.dump({"Name": self.name, "Playlist_URI":self.uri, "Track_URIs":self.tracks}, outfile)
         else:
-            with open_playlist(self.user, self.name + "_ref", "w") as outfile:
-                json.dump({"Playlist_URI":self.name, "Track_URIs":self.tracks}, outfile) 
+            with open_playlist(self.user, self.uri + "_ref", "w") as outfile:
+                json.dump({"Name": self.name, "Playlist_URI":self.uri, "Track_URIs":self.tracks}, outfile)
 
 
 class Drainlist:
@@ -86,13 +88,15 @@ class Drainlist:
         """
         drainlist = json.load(source_file)
         self.user = user
-        self.name = drainlist["Playlist_URI"]
+        self.name = drainlist["Name"]
+        self.uri = drainlist["Playlist_URI"]
         # todo can this be a set?
-        self.source_names = list(set(drainlist["Sources"]))
+        self.source_names = list(set([s["Name"] for s in drainlist["Sources"]]))
+        self.source_uris = list(set([s["URI"] for s in drainlist["Sources"]]))
         self.sources = []
 
         # if there are named sources add the proper playlist objects
-        for name in self.source_names:
+        for name in self.source_uris:
             try:
                 self.add_source_file(name)
             except FileNotFoundError as e:
@@ -120,7 +124,7 @@ class Drainlist:
         """
         toRem = None
         for source in self.sources:
-            if source.name == source_name:
+            if source.uri == source_name:
                 toRem = source
         if toRem:
             self.sources.remove(toRem)
@@ -154,7 +158,7 @@ class Drainlist:
         tracks = []
         for source in self.sources:
             tracks += source.tracks
-        tracks = list(set(tracks) - set(spio.get_tracks(access_token, self.name)))
+        tracks = list(set(tracks) - set(spio.get_tracks(access_token, self.uri)))
         spio.add_tracks_to_drain(access_token, self, list(set(tracks)))
 
     def depopulate(self, access_token):
@@ -173,8 +177,8 @@ class Drainlist:
         Dumps drainlist all sources and all references to disk
         :return: None
         """
-        with open_playlist(self.user, self.name, "w+") as outfile:
-            json.dump({"Playlist_URI":self.name, "Sources":self.source_names}, outfile)
+        with open_playlist(self.user, self.uri, "w+") as outfile:
+            json.dump({"Playlist_URI":self.uri, "Sources":[{"Name":s.name, "URI":s.uri} for s in self.sources]}, outfile)
         for s in self.sources:
             s.reference.write_out()
     
@@ -199,7 +203,7 @@ class Drainlist:
         :return:
         """
         for source in self.sources:
-            filename = user + "/"  "Playlists" + "/" + source.name
+            filename = user + "/"  "Playlists" + "/" + source.uri
             os.remove(filename)
             
 def open_playlist(user, playlist_name, flag = "r"):

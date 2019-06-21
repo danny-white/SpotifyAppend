@@ -10,16 +10,16 @@ import playlist
 
 test_user = "Test_User"
 # dummy lists
-test_drain = "{\"Playlist_URI\": \"spotify:playlist:test_drain\", \"Sources\": [\"spotify:playlist:test_playlist\", \"spotify:playlist:test_playlist2\"]}"
-test_playlist = "{\"Playlist_URI\": \"spotify:playlist:test_playlist\", \"Track_URIs\": [\"spotify:track:t1\", \"spotify:track:t2\", \"spotify:track:t3\"]}"
-test_playlist_ref = "{\"Playlist_URI\": \"spotify:playlist:test_playlist\", \"Track_URIs\": [\"spotify:track:t1\", \"spotify:track:t2\"]}"
+test_drain = "{\"Name\": \"test_drain\",\"Playlist_URI\": \"spotify:playlist:test_drain\", \"Sources\": [\"spotify:playlist:test_playlist\", \"spotify:playlist:test_playlist2\"]}"
+test_playlist = "{\"Name\": \"test_list\", \"Playlist_URI\": \"spotify:playlist:test_playlist\", \"Track_URIs\": [\"spotify:track:t1\", \"spotify:track:t2\", \"spotify:track:t3\"]}"
+test_playlist_ref = "{\"Name\": \"test_list\", \"Playlist_URI\": \"spotify:playlist:test_playlist\", \"Track_URIs\": [\"spotify:track:t1\", \"spotify:track:t2\"]}"
 
 # actual lists for testing
-test_playlist2 = "{\"Playlist_URI\": \"spotify:playlist:4L3PeQ9LzinSq0Q3KnzLvb\", \"Track_URIs\": [\"spotify:track:6koWevx9MqN6efQ6qreIbm\", \"spotify:track:7EE7jbv7Dv8ZkyWBlKhPXX\", \"spotify:track:1zTmKEtaxIqi2ByGBLmI3s\", \"spotify:track:1RjP07A2H4WMmozQidd9x7\", \"spotify:track:0dE9ro91KUtV5Xi7bDPy6b\", \"spotify:track:1UYXdZZMnCrlUqDRuIs9OE\", \"spotify:track:18rXOovmohAMcFwUPAUAN2\", \"spotify:track:3DERgYjztCL6oME2fvRl6z\", \"spotify:track:0TRbihonM8LyyQ7OClspEy\", \"spotify:track:5MbUyUE6erY9mVgXaecQwR\", \"spotify:track:0Mx2W2i58sIPmEvfKdh1Q2\", \"spotify:track:52FCSkVx41xDQ3oCjHIeNJ\", \"spotify:track:7hjJKZwcW0vze3A48dqcCr\", \"spotify:track:08Z3vnfucOMerexVE2RR8w\", \"spotify:track:4FqfG6WnkXEMc6ZZ58lJWb\", \"spotify:track:7Jzr0HLMMvTOo9Xvc8EjZL\", \"spotify:track:3nV9CwvpCHGd9fvJ1pn185\", \"spotify:track:1eueYfJA1ADnfghW90xxxf\", \"spotify:track:4cx6srR6OQzmd6mzpeaQsY\", \"spotify:track:5WwaKGBmg0TpG8mRQpksl2\", \"spotify:track:1wJCpDiJeQccXuNguS8umH\", \"spotify:track:78qM62MHvNxFJLpShqmq28\", \"spotify:track:5EeNRe6Fi29tTrssVzl4dw\", \"spotify:track:3Lr9aRWF57Dd8NsjeWTKNp\", \"spotify:track:1Z5GCYgzsBxb9VUUVQRG2E\", \"spotify:track:74fNA9uOtYFbkpG7gE8AKV\", \"spotify:track:5DQEWQoJ3deYCPkRIFm3Ci\", \"spotify:track:7dYXMe7VAmmkKDyGByUOfM\", \"spotify:track:3ozCQsJ9IA0v3ZlpE21UzK\", \"spotify:track:71CRvX5TW0CsiCxGZ00IfA\"]}"
+test_playlist2 = "{\"Name\": \"test_list_2\", \"Playlist_URI\": \"spotify:playlist:4L3PeQ9LzinSq0Q3KnzLvb\", \"Track_URIs\": [\"spotify:track:6koWevx9MqN6efQ6qreIbm\", \"spotify:track:7EE7jbv7Dv8ZkyWBlKhPXX\", \"spotify:track:1zTmKEtaxIqi2ByGBLmI3s\", \"spotify:track:1RjP07A2H4WMmozQidd9x7\", \"spotify:track:0dE9ro91KUtV5Xi7bDPy6b\", \"spotify:track:1UYXdZZMnCrlUqDRuIs9OE\", \"spotify:track:18rXOovmohAMcFwUPAUAN2\", \"spotify:track:3DERgYjztCL6oME2fvRl6z\", \"spotify:track:0TRbihonM8LyyQ7OClspEy\", \"spotify:track:5MbUyUE6erY9mVgXaecQwR\", \"spotify:track:0Mx2W2i58sIPmEvfKdh1Q2\", \"spotify:track:52FCSkVx41xDQ3oCjHIeNJ\", \"spotify:track:7hjJKZwcW0vze3A48dqcCr\", \"spotify:track:08Z3vnfucOMerexVE2RR8w\", \"spotify:track:4FqfG6WnkXEMc6ZZ58lJWb\", \"spotify:track:7Jzr0HLMMvTOo9Xvc8EjZL\", \"spotify:track:3nV9CwvpCHGd9fvJ1pn185\", \"spotify:track:1eueYfJA1ADnfghW90xxxf\", \"spotify:track:4cx6srR6OQzmd6mzpeaQsY\", \"spotify:track:5WwaKGBmg0TpG8mRQpksl2\", \"spotify:track:1wJCpDiJeQccXuNguS8umH\", \"spotify:track:78qM62MHvNxFJLpShqmq28\", \"spotify:track:5EeNRe6Fi29tTrssVzl4dw\", \"spotify:track:3Lr9aRWF57Dd8NsjeWTKNp\", \"spotify:track:1Z5GCYgzsBxb9VUUVQRG2E\", \"spotify:track:74fNA9uOtYFbkpG7gE8AKV\", \"spotify:track:5DQEWQoJ3deYCPkRIFm3Ci\", \"spotify:track:7dYXMe7VAmmkKDyGByUOfM\", \"spotify:track:3ozCQsJ9IA0v3ZlpE21UzK\", \"spotify:track:71CRvX5TW0CsiCxGZ00IfA\"]}"
 test_playlist2_ref = test_playlist2[:]
-test_playlist3 = "{\"Playlist_URI\": \"spotify:playlist:6E2XjEeEOEhUKVoftRHusb\", \"Track_URIs\": [\"spotify:track:2qOm7ukLyHUXWyR4ZWLwxA\", \"spotify:track:4MbV8zrWudQflnbiIzp29t\", \"spotify:track:3MQmQowCMVhepBDEsuBXIm\", \"spotify:track:63BokRfXSQhEU6Qi2dSJpZ\", \"spotify:track:0WKYRFtH6KKbaNWjsxqm70\", \"spotify:track:503OTo2dSqe7qk76rgsbep\", \"spotify:track:2C3QwVE5adFCVsCqayhPW7\", \"spotify:track:2g8HN35AnVGIk7B8yMucww\", \"spotify:track:0HOqINudNgQFpg1le5Hnqe\", \"spotify:track:2Ih217RCGAmyQR68Nn7Cqo\"]}"
+test_playlist3 = "{\"Name\": \"test_list_3\",\"Playlist_URI\": \"spotify:playlist:6E2XjEeEOEhUKVoftRHusb\", \"Track_URIs\": [\"spotify:track:2qOm7ukLyHUXWyR4ZWLwxA\", \"spotify:track:4MbV8zrWudQflnbiIzp29t\", \"spotify:track:3MQmQowCMVhepBDEsuBXIm\", \"spotify:track:63BokRfXSQhEU6Qi2dSJpZ\", \"spotify:track:0WKYRFtH6KKbaNWjsxqm70\", \"spotify:track:503OTo2dSqe7qk76rgsbep\", \"spotify:track:2C3QwVE5adFCVsCqayhPW7\", \"spotify:track:2g8HN35AnVGIk7B8yMucww\", \"spotify:track:0HOqINudNgQFpg1le5Hnqe\", \"spotify:track:2Ih217RCGAmyQR68Nn7Cqo\"]}"
 test_playlist3_ref = test_playlist3[:]
-test_drain2 = "{\"Playlist_URI\": \"spotify:playlist:069rrIb9s1MRw2BBwXmeJE\", \"Sources\": [\"spotify:playlist:4L3PeQ9LzinSq0Q3KnzLvb\", \"spotify:playlist:6E2XjEeEOEhUKVoftRHusb\"]}"
+test_drain2 = "{\"Name\": \"test_drain\",\"Playlist_URI\": \"spotify:playlist:069rrIb9s1MRw2BBwXmeJE\", \"Sources\": [{\"Name\":\"P1\", \"URI\":\"spotify:playlist:4L3PeQ9LzinSq0Q3KnzLvb\"}, {\"Name\":\"P2\", \"URI\":\"spotify:playlist:6E2XjEeEOEhUKVoftRHusb\"}]}"
 
 dname = "spotify:playlist:069rrIb9s1MRw2BBwXmeJE"
 listname = "spotify:playlist:4L3PeQ9LzinSq0Q3KnzLvb"
@@ -30,40 +30,6 @@ ref2name = "spotify:playlist:6E2XjEeEOEhUKVoftRHusb_ref"
 
 class TestSpotifyMethods(unittest.TestCase):
 
-# todo unsure how best to do auth code tests
-# also token code, for now it works, so don't touch it
-    def test_write_out(self):
-        user = test_user
-        name, uri = "TEST1", "TEST1"
-        tracks = ["t1", "t2", "t3"]
-
-        # write out a fake playlist and reference
-        spotify.write_out_tracklist(user, name, uri, tracks)
-        self.assertTrue(os.path.exists(user + "/Playlists/" + name))
-        self.assertTrue(os.path.exists(user + "/Playlists/" + name + "_ref"))
-
-        
-        # update the reference
-        new_tracks = ["t4","t5","t6"]
-        spotify.write_out_tracklist(user, name, uri, new_tracks)
-
-        # test to ensure the reference was not updated, but the 
-        # playlist was
-        with playlist.open_playlist(user, name) as infile:
-            for line in infile:
-                for t in new_tracks:
-                    self.assertTrue(t in line)
-                for t in tracks:
-                    self.assertFalse(t in line)
-        with playlist.open_playlist(user, name + "_ref") as infile:
-            for line in infile:
-                for t in tracks:
-                    self.assertTrue(t in line)
-                for t in new_tracks:
-                    self.assertFalse(t in line)
-        os.remove(test_user + "/Playlists/TEST1")
-        os.remove(test_user + "/Playlists/TEST1_ref")
-    
     def test_list_drains(self):
         drain_name = "test_drain"
         with playlist.open_playlist(test_user, drain_name, "w+") as outfile:
@@ -71,14 +37,14 @@ class TestSpotifyMethods(unittest.TestCase):
         self.assertEqual(spotify.list_drains(test_user), ["test_drain"])
         os.remove(test_user + "/Playlists/" + drain_name)
 
-    def test_create_new_drain(self):
-        new_drainlist = "new_drainlist"
-        playlist_uris = ["p3,p4,p5"]
-        spotify.create_new_drain(test_user, new_drainlist, playlist_uris)
-        with playlist.open_playlist(test_user, new_drainlist) as infile:
-            for line in infile:
-                self.assertTrue(all([plist in line for plist in playlist_uris]))
-        os.remove(test_user + "/Playlists/new_drainlist")
+    # def test_create_new_drain(self):
+    #     new_drainlist = "new_drainlist"
+    #     playlist_uris = ["p3,p4,p5"]
+    #     spotify.create_new_drain(test_user, new_drainlist, playlist_uris)
+    #     with playlist.open_playlist(test_user, new_drainlist) as infile:
+    #         for line in infile:
+    #             self.assertTrue(all([plist in line for plist in playlist_uris]))
+    #     os.remove(test_user + "/Playlists/new_drainlist")
 
 
 
@@ -109,8 +75,8 @@ class TestPlaylistMethods(unittest.TestCase):
     def test_write_out(self):
         import copy
         plist2 = copy.copy(self.plist)
-        plist2.name = "test2"
-        plist2.reference.name = "test2"
+        plist2.uri = "test2"
+        plist2.reference.uri = "test2"
         plist2.write_out()
 
         with playlist.open_playlist(test_user, "test2") as infile:
@@ -146,29 +112,30 @@ class TestDrainlistMethods(unittest.TestCase):
             d = playlist.Drainlist(test_user, infile)
         d.remove_source(list2name)
         d.add_source_file(list2name)
-        self.assertEqual(set([s.name for s in d.sources]), {listname, list2name})
+        self.assertEqual(set([s.uri for s in d.sources]), {listname, list2name})
 
     def test_remove_source(self):
         with playlist.open_playlist(test_user, dname) as infile:
             d = playlist.Drainlist(test_user, infile)
         d.remove_source(list2name)
-        self.assertEqual(set([s.name for s in d.sources]), {listname})
+        self.assertEqual(set([s.uri for s in d.sources]), {listname})
 
     def add_source_api(self):
         with playlist.open_playlist(test_user, dname) as infile:
             d = playlist.Drainlist(test_user, infile)
         d.remove_source(list2name)
         d.add_source_file(list2name)
-        self.assertEqual(set([s.name for s in d.sources]), {listname, list2name})
+        self.assertEqual(set([s.uri for s in d.sources]), {listname, list2name})
 
     def test_init(self):
         with playlist.open_playlist(test_user, dname) as infile:
             d = playlist.Drainlist(test_user, infile)
 
         self.assertEqual(d.user, test_user)
-        self.assertEqual(d.name, dname)
-        self.assertEqual(set(d.source_names), {listname, list2name})
-        self.assertEqual({s.name for s in d.sources}, {listname, list2name})
+        self.assertEqual(d.uri, dname)
+        self.assertEqual(set(d.source_uris), {listname, list2name})
+        self.assertEqual(set(d.source_names), {"P1","P2"})
+        self.assertEqual({s.uri for s in d.sources}, {listname, list2name})
 
     def test_populate_depopulate(self):
         with playlist.open_playlist(test_user, dname) as infile:
@@ -177,9 +144,9 @@ class TestDrainlistMethods(unittest.TestCase):
         token = spio.get_access_token(test_user)
         tracks = spio.get_tracks(token, listname) + spio.get_tracks(token, list2name)
         d.populate(token)
-        self.assertEqual(set(tracks), set(spio.get_tracks(token, d.name)))
+        self.assertEqual(set(tracks), set(spio.get_tracks(token, d.uri)))
         d.depopulate(token)
-        self.assertEqual(set(), set(spio.get_tracks(token, d.name)))
+        self.assertEqual(set(), set(spio.get_tracks(token, d.uri)))
 
     def test_write_out(self):
         with playlist.open_playlist(test_user, dname) as infile:
@@ -249,11 +216,11 @@ class TestSpioMethdods(unittest.TestCase):
             d = playlist.Drainlist(test_user, infile)
         dump_tracks = ["spotify:track:7EE7jbv7Dv8ZkyWBlKhPXX"]
         spio.add_tracks_to_drain(self.token, d, dump_tracks)
-        tracks = spio.get_tracks(self.token, d.name)
+        tracks = spio.get_tracks(self.token, d.uri)
         self.assertEqual(tracks, dump_tracks)
         spio.remove_tracks_from_drain(self.token, d, dump_tracks)
-        spio.get_tracks(self.token, d.name)
-        tracks = spio.get_tracks(self.token, d.name)
+        spio.get_tracks(self.token, d.uri)
+        tracks = spio.get_tracks(self.token, d.uri)
         self.assertEqual(tracks, [])
 
     def test_create_and_delete_playlist(self):
@@ -268,9 +235,13 @@ class TestSpioMethdods(unittest.TestCase):
     def test_remove_tracks_from_drain(self):
         1
 #     todo also token code
-
+    def test_get_name(self):
+        token = spio.get_access_token(test_user)
+        n = spio.get_name(token, "spotify:playlist:069rrIb9s1MRw2BBwXmeJE")
+        self.assertEqual(n, "Default")
 
 class IntegrationTests(unittest.TestCase):
+    drainSinkName = "drainSink"
     drain_name = "spotify:playlist:069rrIb9s1MRw2BBwXmeJE"
     sources = ["4L3PeQ9LzinSq0Q3KnzLvb", "6E2XjEeEOEhUKVoftRHusb"]
     tracks = ['spotify:track:6koWevx9MqN6efQ6qreIbm', 'spotify:track:7EE7jbv7Dv8ZkyWBlKhPXX',
@@ -294,18 +265,18 @@ class IntegrationTests(unittest.TestCase):
               'spotify:track:2C3QwVE5adFCVsCqayhPW7', 'spotify:track:2g8HN35AnVGIk7B8yMucww',
               'spotify:track:0HOqINudNgQFpg1le5Hnqe', 'spotify:track:2Ih217RCGAmyQR68Nn7Cqo']
     def setUp(self):
-        spotify.create_new_drain(test_user, self.drain_name, self.sources)
+        spotify.create_new_drain(test_user, self.drainSinkName ,self.drain_name, self.sources)
         self.access_token = spio.get_access_token(test_user)
         with playlist.open_playlist(test_user, self.drain_name) as infile:
             self.Dlist = playlist.Drainlist(test_user, infile)
 
-        if spio.get_tracks(self.access_token, self.Dlist.name):
+        if spio.get_tracks(self.access_token, self.Dlist.uri):
             self.Dlist.depopulate(spio.get_access_token(test_user))
     def tearDown(self):
         for f in os.listdir(test_user + "/Playlists/"):
             os.remove(test_user + "/Playlists/" + f)
 
-        if spio.get_tracks(self.access_token, self.Dlist.name):
+        if spio.get_tracks(self.access_token, self.Dlist.uri):
             self.Dlist.depopulate(spio.get_access_token(test_user))
     def test_integ_populate_and_sync(self):
 
@@ -317,7 +288,7 @@ class IntegrationTests(unittest.TestCase):
         self.Dlist.populate(self.access_token)
         tracks = self.tracks[:]
         tracks.remove(dropped_track)
-        self.assertEqual(set(tracks), set(spio.get_tracks(self.access_token, self.Dlist.name)))
+        self.assertEqual(set(tracks), set(spio.get_tracks(self.access_token, self.Dlist.uri)))
 
         # re-add the track and sync
         self.Dlist.sources[0].tracks += [dropped_track]
@@ -326,10 +297,10 @@ class IntegrationTests(unittest.TestCase):
 
         # check if the track was added
         tracks += [dropped_track]
-        self.assertEqual(set(tracks), set(spio.get_tracks(self.access_token, self.Dlist.name)))
+        self.assertEqual(set(tracks), set(spio.get_tracks(self.access_token, self.Dlist.uri)))
         # depopulate
         self.Dlist.depopulate(spio.get_access_token(test_user))
-        self.assertEqual(set(), set(spio.get_tracks(self.access_token, self.Dlist.name)))
+        self.assertEqual(set(), set(spio.get_tracks(self.access_token, self.Dlist.uri)))
 
         self.Dlist.cleanup(test_user)
         self.assertEqual(set(os.listdir(test_user + "/Playlists/")), {'spotify:playlist:4L3PeQ9LzinSq0Q3KnzLvb_ref', 'spotify:playlist:069rrIb9s1MRw2BBwXmeJE', 'spotify:playlist:6E2XjEeEOEhUKVoftRHusb_ref'})

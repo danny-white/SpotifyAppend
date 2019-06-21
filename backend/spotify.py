@@ -140,9 +140,9 @@ def create_new_drain_from_name(user, dlistName, sources):
     """
     # create new playlist with given name, get the URI and proceed
     uri = spio.create_playlists(spio.get_access_token(user), dlistName)
-    return create_new_drain(user, uri, sources)
+    return create_new_drain(user, dlistName, uri, sources)
 
-def create_new_drain(user, drainlist, sources):
+def create_new_drain(user, dListNameame,  drainlist, sources):
     """
     Creates a new drainlist
     :param user: User owning the Drainlist
@@ -152,8 +152,9 @@ def create_new_drain(user, drainlist, sources):
     """
     if "spotify:playlist:" not in sources[0]:
         sources = ["spotify:playlist:" + source for source in sources]
+    sources = [{"URI": source, "Name":spio.get_name(spio.get_access_token(user), source)} for source in sources]
     with playlist.open_playlist(user, drainlist, "w+") as dfile:
-        json.dump({"Playlist_URI": drainlist, "Sources": sources}, dfile)
+        json.dump({"Name": dListNameame,"Playlist_URI": drainlist, "Sources": sources}, dfile)
 
     with playlist.open_playlist(user, drainlist) as dfile:
         dlist = playlist.Drainlist(user, dfile)
@@ -161,30 +162,11 @@ def create_new_drain(user, drainlist, sources):
     dlist.populate(spio.get_access_token(user))
     dlist.cleanup(user)
 
-    return json.dumps({"Playlist_URI": drainlist, "Sources": sources})
+    return json.dumps({"Name": dListNameame,"Playlist_URI": drainlist, "Sources": sources})
 
 ####################################
 ###### End Interactive Code ########
 ####################################
-
-
-# using the arguments, creates a saved version of the playlist, and 
-# saves a new reference playlist. If a reference already exists, skip
-# this does not user in memory playlist objects, just raw data from Spotify
-# args: user = name of the current user
-#       playlist_name = name of the playlist being written out
-#       playlist_uri = spotify internal code for the playlist
-#       tracklist = list of tracks corresponding to this playlist
-def write_out_tracklist(user, playlist_name, playlist_uri, tracklist):
-    with open(user + "/Playlists/" + playlist_uri, "w+") as outfile:
-        json.dump({"Playlist_URI":playlist_uri, "Track_URIs":tracklist}, outfile)
-    try:
-        with open(user + "/Playlists/" + playlist_uri + "_ref", "r") as outfile:
-            1
-    except:
-        with open(user + "/Playlists/" + playlist_uri + "_ref", "w+") as outfile:
-            json.dump({"Playlist_URI":playlist_uri, "Track_URIs":tracklist}, outfile)
-
 
 def refresh(user, token):
     """
@@ -205,9 +187,9 @@ def refresh(user, token):
         spio.add_tracks_to_drain(token, d, diff)
         d.cleanup(user)
 
-user = "Danny"
-token = spio.get_access_token(user)
-u = ["spotify:playlist:16wE0quJ4wHXGaY78MZikr", "spotify:playlist:0FMPIrKYN6hIEH54FyZ1oa"]
+# user = "Danny"
+# token = spio.get_access_token(user)
+# u = ["spotify:playlist:16wE0quJ4wHXGaY78MZikr", "spotify:playlist:0FMPIrKYN6hIEH54FyZ1oa"]
 
 # refresh(user, token)
 

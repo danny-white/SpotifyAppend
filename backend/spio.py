@@ -45,6 +45,14 @@ def create_playlists(access_token, name):
     r = json.loads(resp.text)
     return r["uri"]
 
+def get_name(access_token, uri):
+    id = uri.split(":")[2]
+    url = "https://api.spotify.com/v1/playlists" + "/" + id
+    headers = {"Authorization": "Bearer " + access_token}
+    requests.get(url=url, headers=headers)
+    plist = requests.get(url=url, headers=headers).json()
+    return plist["name"]
+
 def remove_playlist(access_token, uri):
     """
     unfollows one the user's playlist with the given URI
@@ -87,7 +95,7 @@ def add_tracks_to_drain(access_token, drainlist, tracks):
     """
     track_list = split_list(tracks, 100)
     # if there are no tracks this is still an empty list, iterate through split list and upload
-    id = drainlist.name.split(":")[2]
+    id = drainlist.uri.split(":")[2]
     for tracks in track_list:
         trackstring = generate_uri_string(tracks)
         url = "https://api.spotify.com/v1/playlists/%s/tracks?uris=%s" % (id, trackstring)
@@ -102,7 +110,7 @@ def remove_tracks_from_drain(access_token, drainlist, tracks):
     :param tracks: list of track URI's to be removed from the list
     :return:
     """
-    id = drainlist.name.split(":")[2]
+    id = drainlist.uri.split(":")[2]
     track_list = split_list(tracks, 100)
     for tracks in track_list:
         url = "https://api.spotify.com/v1/playlists/" + id + "/tracks"
@@ -222,7 +230,6 @@ def make_authorization_headers(client_id, client_secret):
 ####################################
 #### End Token Handling Code #######
 ####################################
-
 
 
 ####################################
