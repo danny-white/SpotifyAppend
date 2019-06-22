@@ -231,6 +231,8 @@ def make_authorization_headers(client_id, client_secret):
 #### End Token Handling Code #######
 ####################################
 
+def print_sources(sources):
+    return [{"Name":s.name, "URI":s.uri} for s in sources]
 
 ####################################
 ######### End Utilities  ###########

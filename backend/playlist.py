@@ -177,8 +177,8 @@ class Drainlist:
         Dumps drainlist all sources and all references to disk
         :return: None
         """
-        with open_playlist(self.user, self.uri, "w+") as outfile:
-            json.dump({"Playlist_URI":self.uri, "Sources":[{"Name":s.name, "URI":s.uri} for s in self.sources]}, outfile)
+        with open_drainlist(self.user, self.uri, "w+") as outfile:
+            json.dump({"Playlist_URI":self.uri, "Sources": spio.print_sources(self.sources)}, outfile)
         for s in self.sources:
             s.reference.write_out()
     
@@ -208,6 +208,12 @@ class Drainlist:
             
 def open_playlist(user, playlist_name, flag = "r"):
     return open(user + "/Playlists/" + playlist_name, flag)
+
+def open_drainlist(user, playlist_name, flag = "r"):
+    return open_playlist(user, playlist_name + "_drain", flag)
+
+def open_reflist(user, playlist_name, flag = "r"):
+    return open_playlist(user, playlist_name + "_ref", flag)
 
 
 def generate_drainlist(user, sources, destination_list):

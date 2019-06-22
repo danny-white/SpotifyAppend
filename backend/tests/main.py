@@ -100,7 +100,7 @@ class TestDrainlistMethods(unittest.TestCase):
             outfile.write(test_playlist3_ref)
         with playlist.open_playlist(test_user, list2name, "w+") as outfile:
             outfile.write(test_playlist3)
-        with playlist.open_playlist(test_user, dname, "w+") as outfile:
+        with playlist.open_drainlist(test_user, dname, "w+") as outfile:
             outfile.write(test_drain2)
 
     def tearDown(self):
@@ -108,27 +108,27 @@ class TestDrainlistMethods(unittest.TestCase):
             os.remove(test_user + "/Playlists/" + f)
 
     def test_add_source_init(self):
-        with playlist.open_playlist(test_user, dname) as infile:
+        with playlist.open_drainlist(test_user, dname) as infile:
             d = playlist.Drainlist(test_user, infile)
         d.remove_source(list2name)
         d.add_source_file(list2name)
         self.assertEqual(set([s.uri for s in d.sources]), {listname, list2name})
 
     def test_remove_source(self):
-        with playlist.open_playlist(test_user, dname) as infile:
+        with playlist.open_drainlist(test_user, dname) as infile:
             d = playlist.Drainlist(test_user, infile)
         d.remove_source(list2name)
         self.assertEqual(set([s.uri for s in d.sources]), {listname})
 
     def add_source_api(self):
-        with playlist.open_playlist(test_user, dname) as infile:
+        with playlist.open_drainlist(test_user, dname) as infile:
             d = playlist.Drainlist(test_user, infile)
         d.remove_source(list2name)
         d.add_source_file(list2name)
         self.assertEqual(set([s.uri for s in d.sources]), {listname, list2name})
 
     def test_init(self):
-        with playlist.open_playlist(test_user, dname) as infile:
+        with playlist.open_drainlist(test_user, dname) as infile:
             d = playlist.Drainlist(test_user, infile)
 
         self.assertEqual(d.user, test_user)
@@ -138,7 +138,7 @@ class TestDrainlistMethods(unittest.TestCase):
         self.assertEqual({s.uri for s in d.sources}, {listname, list2name})
 
     def test_populate_depopulate(self):
-        with playlist.open_playlist(test_user, dname) as infile:
+        with playlist.open_drainlist(test_user, dname) as infile:
             d = playlist.Drainlist(test_user, infile)
 
         token = spio.get_access_token(test_user)
@@ -149,10 +149,10 @@ class TestDrainlistMethods(unittest.TestCase):
         self.assertEqual(set(), set(spio.get_tracks(token, d.uri)))
 
     def test_write_out(self):
-        with playlist.open_playlist(test_user, dname) as infile:
+        with playlist.open_drainlist(test_user, dname) as infile:
             d = playlist.Drainlist(test_user, infile)
         d.write_out()
-        with playlist.open_playlist(test_user, dname) as infile:
+        with playlist.open_drainlist(test_user, dname) as infile:
             data = infile.read()
         self.assertTrue(listname in data)
         self.assertTrue(list2name in data)
@@ -160,22 +160,22 @@ class TestDrainlistMethods(unittest.TestCase):
 
 
     def test_sync(self):
-        with playlist.open_playlist(test_user, dname) as infile:
+        with playlist.open_drainlist(test_user, dname) as infile:
             d = playlist.Drainlist(test_user, infile)
         self.assertEqual(set(), d.sync())
 
 
     def test_cleanup(self):
-        with playlist.open_playlist(test_user, dname) as infile:
+        with playlist.open_drainlist(test_user, dname) as infile:
             d = playlist.Drainlist(test_user, infile)
         expected_files = ['spotify:playlist:4L3PeQ9LzinSq0Q3KnzLvb', 'spotify:playlist:6E2XjEeEOEhUKVoftRHusb',
-         'spotify:playlist:4L3PeQ9LzinSq0Q3KnzLvb_ref', 'spotify:playlist:069rrIb9s1MRw2BBwXmeJE',
+         'spotify:playlist:4L3PeQ9LzinSq0Q3KnzLvb_ref', 'spotify:playlist:069rrIb9s1MRw2BBwXmeJE_drain',
          'spotify:playlist:6E2XjEeEOEhUKVoftRHusb_ref']
 
         self.assertEqual(set(os.listdir(test_user + "/Playlists/")), set(expected_files))
         d.cleanup(test_user)
 
-        expected_files = ['spotify:playlist:4L3PeQ9LzinSq0Q3KnzLvb_ref', 'spotify:playlist:069rrIb9s1MRw2BBwXmeJE',
+        expected_files = ['spotify:playlist:4L3PeQ9LzinSq0Q3KnzLvb_ref', 'spotify:playlist:069rrIb9s1MRw2BBwXmeJE_drain',
          'spotify:playlist:6E2XjEeEOEhUKVoftRHusb_ref']
 
         self.assertEqual(set(os.listdir(test_user + "/Playlists/")), set(expected_files))
@@ -192,7 +192,7 @@ class TestSpioMethdods(unittest.TestCase):
             outfile.write(test_playlist3_ref)
         with playlist.open_playlist(test_user, list2name, "w+") as outfile:
             outfile.write(test_playlist3)
-        with playlist.open_playlist(test_user, dname, "w+") as outfile:
+        with playlist.open_drainlist(test_user, dname, "w+") as outfile:
             outfile.write(test_drain2)
 
     def tearDown(self):
@@ -212,7 +212,7 @@ class TestSpioMethdods(unittest.TestCase):
         self.assertTrue("spotify:track:7EE7jbv7Dv8ZkyWBlKhPXX" in tracks)
 
     def test_add_remove_tracks_to_from_drain(self):
-        with playlist.open_playlist(test_user, dname) as infile:
+        with playlist.open_drainlist(test_user, dname) as infile:
             d = playlist.Drainlist(test_user, infile)
         dump_tracks = ["spotify:track:7EE7jbv7Dv8ZkyWBlKhPXX"]
         spio.add_tracks_to_drain(self.token, d, dump_tracks)
@@ -267,7 +267,7 @@ class IntegrationTests(unittest.TestCase):
     def setUp(self):
         spotify.create_new_drain(test_user, self.drainSinkName ,self.drain_name, self.sources)
         self.access_token = spio.get_access_token(test_user)
-        with playlist.open_playlist(test_user, self.drain_name) as infile:
+        with playlist.open_drainlist(test_user, self.drain_name) as infile:
             self.Dlist = playlist.Drainlist(test_user, infile)
 
         if spio.get_tracks(self.access_token, self.Dlist.uri):
@@ -303,7 +303,7 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(set(), set(spio.get_tracks(self.access_token, self.Dlist.uri)))
 
         self.Dlist.cleanup(test_user)
-        self.assertEqual(set(os.listdir(test_user + "/Playlists/")), {'spotify:playlist:4L3PeQ9LzinSq0Q3KnzLvb_ref', 'spotify:playlist:069rrIb9s1MRw2BBwXmeJE', 'spotify:playlist:6E2XjEeEOEhUKVoftRHusb_ref'})
+        self.assertEqual(set(os.listdir(test_user + "/Playlists/")), {'spotify:playlist:4L3PeQ9LzinSq0Q3KnzLvb_ref', 'spotify:playlist:069rrIb9s1MRw2BBwXmeJE_drain', 'spotify:playlist:6E2XjEeEOEhUKVoftRHusb_ref'})
 
 class WebRequestTests(unittest.TestCase):
     # todo this class will test entire behavior for frontend entrypoints

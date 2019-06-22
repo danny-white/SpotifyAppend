@@ -94,12 +94,27 @@ def signed_in():
 
 # Takes playlists owned by the user and formats them to be sent to the frontend
 @app.route("/list_playlists")
-def list_drains_request():
+def list_playlists_request():
     user = request.args["user"]
     lists = spio.get_playlists(spio.get_access_token(user))
     resp = app.make_response(json.dumps([{"name": l["name"], "uri": l["uri"]} for l in lists]))
     resp.headers['Access-Control-Allow-Origin'] = '*'
     return resp
+
+@app.route("/list_drains")
+def list_drains_request():
+    user = request.args["user"]
+
+    drain_names = [f for f in os.listdir(user + "/Playlists/") if f.endswith("_drain")]
+
+    drains = []
+    for d in [d.strip("_drain") for d in drain_names]:
+        with playlist.open_drainlist(user, d) as infile:
+            drains.append(playlist.Drainlist(user, infile))
+    resp = app.make_response(json.dumps([{"Name": d.name, "URI": d.uri, "Sources": spio.print_sources(d.sources)} for d in drains]))
+    resp.headers['Access-Control-Allow-Origin'] = '*'
+    return resp
+
 
 # Collects all drains associated with a user
 def list_drains(user):
@@ -153,10 +168,10 @@ def create_new_drain(user, dListNameame,  drainlist, sources):
     if "spotify:playlist:" not in sources[0]:
         sources = ["spotify:playlist:" + source for source in sources]
     sources = [{"URI": source, "Name":spio.get_name(spio.get_access_token(user), source)} for source in sources]
-    with playlist.open_playlist(user, drainlist, "w+") as dfile:
+    with playlist.open_drainlist(user, drainlist, "w+") as dfile:
         json.dump({"Name": dListNameame,"Playlist_URI": drainlist, "Sources": sources}, dfile)
 
-    with playlist.open_playlist(user, drainlist) as dfile:
+    with playlist.open_drainlist(user, drainlist) as dfile:
         dlist = playlist.Drainlist(user, dfile)
 
     dlist.populate(spio.get_access_token(user))
@@ -179,13 +194,14 @@ def refresh(user, token):
     uris = [f for f in os.listdir(user + "/Playlists/") if "_ref" not in f]
     print(uris)
     for uri in uris:
-        with playlist.open_playlist(user, uri) as infile:
+        with playlist.open_drainlist(user, uri) as infile:
             d = playlist.Drainlist(user, infile)
 
         diff = d.sync()
         d.write_out()
         spio.add_tracks_to_drain(token, d, diff)
         d.cleanup(user)
+
 
 # user = "Danny"
 # token = spio.get_access_token(user)
