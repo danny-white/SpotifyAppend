@@ -37,18 +37,6 @@ class TestSpotifyMethods(unittest.TestCase):
         self.assertEqual(spotify.list_drains(test_user), ["test_drain"])
         os.remove(test_user + "/Playlists/" + drain_name)
 
-    # def test_create_new_drain(self):
-    #     new_drainlist = "new_drainlist"
-    #     playlist_uris = ["p3,p4,p5"]
-    #     spotify.create_new_drain(test_user, new_drainlist, playlist_uris)
-    #     with playlist.open_playlist(test_user, new_drainlist) as infile:
-    #         for line in infile:
-    #             self.assertTrue(all([plist in line for plist in playlist_uris]))
-    #     os.remove(test_user + "/Playlists/new_drainlist")
-
-
-
-
 
     # write Drainlist and Playlist class tests
 class TestPlaylistMethods(unittest.TestCase):

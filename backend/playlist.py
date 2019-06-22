@@ -85,6 +85,10 @@ class Drainlist:
         Generates a new Drainlist object for the given user
         :param user: Associated user
         :param source_file: File Drainlist is loaded from
+        todo update to another level of nesting to prevent cross inheritance issues
+            currently if two playlists share a source one will update, update the ref
+            and the other will not get the changes, nesting is much simpler than weird
+            concurrency logic
         """
         drainlist = json.load(source_file)
         self.user = user
@@ -178,7 +182,7 @@ class Drainlist:
         :return: None
         """
         with open_drainlist(self.user, self.uri, "w+") as outfile:
-            json.dump({"Playlist_URI":self.uri, "Sources": spio.print_sources(self.sources)}, outfile)
+            json.dump({"Name": self.name, "Playlist_URI":self.uri, "Sources": spio.print_sources(self.sources)}, outfile)
         for s in self.sources:
             s.reference.write_out()
     
@@ -215,10 +219,6 @@ def open_drainlist(user, playlist_name, flag = "r"):
 def open_reflist(user, playlist_name, flag = "r"):
     return open_playlist(user, playlist_name + "_ref", flag)
 
-
-def generate_drainlist(user, sources, destination_list):
-        with open_playlist(user, destination_list, "w+") as outfile:
-            json.dump({"Playlist_URI": destination_list, "Sources":sources}, outfile)
 
 
 

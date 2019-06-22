@@ -106,11 +106,13 @@ def list_drains_request():
     user = request.args["user"]
 
     drain_names = [f for f in os.listdir(user + "/Playlists/") if f.endswith("_drain")]
-
     drains = []
-    for d in [d.strip("_drain") for d in drain_names]:
-        with playlist.open_drainlist(user, d) as infile:
-            drains.append(playlist.Drainlist(user, infile))
+    for drain in [d.replace("_drain","") for d in drain_names]:
+        with playlist.open_drainlist(user, drain) as infile:
+            dlist = playlist.Drainlist(user, infile)
+            drains.append(dlist)
+            dlist.cleanup(user)
+
     resp = app.make_response(json.dumps([{"Name": d.name, "URI": d.uri, "Sources": spio.print_sources(d.sources)} for d in drains]))
     resp.headers['Access-Control-Allow-Origin'] = '*'
     return resp
@@ -179,6 +181,41 @@ def create_new_drain(user, dListNameame,  drainlist, sources):
 
     return json.dumps({"Name": dListNameame,"Playlist_URI": drainlist, "Sources": sources})
 
+@app.route("/remove_source")
+def remove_source_request():
+    user = request.args["user"]
+    uri = request.args["listURI"]
+    sinkName = request.args["sinkURI"]
+    with playlist.open_drainlist(user, sinkName) as infile:
+        dlist = playlist.Drainlist(user, infile)
+    dlist.cleanup(user)
+    dlist.remove_source(uri)
+    dlist.write_out()
+    os.remove(user + "/Playlists/" + uri + "_ref")
+
+    resp = app.make_response("success")
+    resp.headers['Access-Control-Allow-Origin'] = '*'
+
+    return resp
+
+@app.route("/add_source")
+def add_source_request():
+    user = request.args["user"]
+    uri = request.args["listURI"]
+    sinkName = request.args["sinkURI"]
+    with playlist.open_drainlist(user, sinkName) as infile:
+        dlist = playlist.Drainlist(user, infile)
+    dlist.add_source_api(uri)
+    dlist.write_out()
+    dlist.cleanup(user)
+    resp = app.make_response("success")
+    resp.headers['Access-Control-Allow-Origin'] = '*'
+
+    return resp
+
+
+
+
 ####################################
 ###### End Interactive Code ########
 ####################################
@@ -191,8 +228,7 @@ def refresh(user, token):
     :param token: The users token
     :return: None
     """
-    uris = [f for f in os.listdir(user + "/Playlists/") if "_ref" not in f]
-    print(uris)
+    uris = [f.replace("_drain", "") for f in os.listdir(user + "/Playlists/") if "_drain" in f]
     for uri in uris:
         with playlist.open_drainlist(user, uri) as infile:
             d = playlist.Drainlist(user, infile)
