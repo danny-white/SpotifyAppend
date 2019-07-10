@@ -25,7 +25,7 @@ user = "Danny" if __name__ == "__main__" else "Test_User"
 # then create wrapper funcs that simply call the local 
 # func after extracting the args from a request
 
-# this needs to change at some point but not now
+
 
 # todo change this to return to the frontend homepage
 auth_completed_url = spio.myUrl + "authentication_completed"
@@ -37,7 +37,7 @@ with open(cwd + "/Secrets", "r") as infile:
 client_id = sec[0]
 client_secret= sec[1]
 
-# Get these The F out of here eventually
+# Todo, you can probably remove these now, double check though
 global access_token
 global refresh_token 
 

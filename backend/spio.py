@@ -1,10 +1,11 @@
-import requests, base64, time
+import requests, base64, time, os
 import json
 
+# put this in the DB as well NO GLOBALS!
 myUrl = "http://127.0.0.1:5000/"
 cwd = "/Users/Danny/Documents/CS/SpotifyAppend/backend"
 uri_header = "spotify:playlist:"
-sec = []
+sec = [] # Secrets can be put in the db secrets table
 with open(cwd + "/Secrets", "r") as infile:
     for line in infile:
         sec.append(line.strip())

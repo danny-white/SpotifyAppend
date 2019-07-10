@@ -36,7 +36,7 @@ class Playlist:
     @classmethod
     def from_web_api(cls, user, access_token, uri, reference):
         """
-        Generates a playlist object from a dumped file
+        Generates a playlist object from the spotify API
         :param user: Associated user
         :param access_token:
         :param uri: the URI corresponding to the playlist
