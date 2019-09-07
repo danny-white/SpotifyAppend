@@ -1,4 +1,4 @@
-from flask import Flask, redirect, request
+from flask import Flask, redirect, request, sessions
 import urllib
 import requests
 import json 
@@ -49,6 +49,9 @@ global refresh_token
 # Tokens are present it presents the landing page, if not it requests tokens
 @app.route("/")
 def initialize():
+    session = request.cookies.get('SESSION_ID', '')
+    print(session)
+    print(1)
     try:
         spio.get_access_token(user)
         return redirect(auth_completed_url)
