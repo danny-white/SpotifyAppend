@@ -1,16 +1,17 @@
 <!DOCTYPE html>
 <html>
-  <script src="/script.js"></script>
+  <script src="/static/script.js"></script>
   <title>W3.CSS Template</title>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="/w3.css">
-  <link rel="stylesheet" href="/w3-theme-black.css">
+  <link rel="stylesheet" href="/static/styles/w3.css">
+  <!-- keeping these off so we can work offline-->
+  <link rel="stylesheet" href="/static/styles/w3-theme-black.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.3.0/css/font-awesome.min.css">
   <body>
     <!-- Header -->
     <header class="w3-container w3-theme w3-padding" id="myHeader">
-      
+
       <br>
       <div class="w3-center">
         <h4>BEAUTIFUL RESPONSIVE WEB SITES</h4>
@@ -19,27 +20,25 @@
     </header>
     <div class="w3-row-padding w3-center w3-margin-top">
       <div class="w3-half">
-        <div class = "w3-card w3-container">
-          <h4>Existing Sourced Playlists</h4>
-          
-          <ul id="drainList" class="w3-ul">
-          </ul>
-          <p></p>
-          
-        </div>
-        
-        
-      </div>
-      <div class = "w3-half">
-        <div class = "w3-card w3-container">
-          <h4>Selected Sourced Playlist Structure</h4>
-          
-          <div id="structure">
-            <p>Click a List on the Left</p>
+        <div class="w3-card w3-container" style="min-height:250px">
+          <h3>Create New Sourced Playlist</h3><br>
+          <div onclick = "location.href = 'Create'" style="cursor: pointer; display: inline-block;">
+            <i class="fa fa-plus w3-margin-bottom w3-text-theme" style="font-size:120px"></i>
           </div>
-          
         </div>
       </div>
+      <div class="w3-half">
+        <div class="w3-card w3-container" style="min-height:250px">
+          <h3>View Existing Sourced Playlists</h3><br>
+          <div onclick = "location.href = 'Edit'" style="cursor: pointer; display: inline-block;">
+            <i class="fa fa-bars w3-margin-bottom w3-text-theme" style="font-size:120px"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+    <br>
+    <div class = "w3-center">
+      <button class="w3-btn w3-black" onclick="refresh()">REFRESH</button>
     </div>
     <br>
     <!-- Footer -->
@@ -48,5 +47,4 @@
       <p>Check out my  <a href="w3css_references.asp" class="w3-btn w3-theme-light" target="_blank">Github</a></p>
     </footer>
   </body>
-  <script type="text/javascript"> getDrainlists()</script>
 </html>

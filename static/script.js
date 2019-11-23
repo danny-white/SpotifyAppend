@@ -3,7 +3,6 @@
 var nameToUri;
 var currentDlists;
 
-
 function updatePlaylists(){
     // get a better user delineation method
     // user = window.prompt("what is your username")

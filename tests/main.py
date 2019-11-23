@@ -294,7 +294,7 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(set(os.listdir(test_user + "/Playlists/")), {'spotify:playlist:4L3PeQ9LzinSq0Q3KnzLvb_ref', 'spotify:playlist:069rrIb9s1MRw2BBwXmeJE_drain', 'spotify:playlist:6E2XjEeEOEhUKVoftRHusb_ref'})
 
 class WebRequestTests(unittest.TestCase):
-    # todo this class will test entire behavior for frontend entrypoints
+    # todo this class will test entire behavior for templates entrypoints
     # take in plaintext representing the request data and proceed from there,
     # piggybacks on the rest of the methods working
     1

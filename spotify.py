@@ -1,4 +1,4 @@
-from flask import Flask, redirect, request, sessions
+from flask import Flask, redirect, request, sessions, render_template
 import urllib
 import requests
 import json 
@@ -16,18 +16,18 @@ from flask_cors import CORS
 
 app = Flask(__name__)
 CORS(app)
-cwd = "/Users/Danny/Documents/CS/SpotifyAppend/backend"
+cwd = "/Users/Danny/Documents/CS/SpotifyAppend"
 
-# hacky test global thing, will remove later once the frontend is properly attached 
-user = "Danny" if __name__ == "__main__" else "Test_User" 
-
+# hacky test global thing, will remove later once the templates is properly attached
+# user = "Danny" if __name__ == "__main__" else "Test_User"
+user = "Danny"
 # todo: change the API so that functions take in args for local testing, 
 # then create wrapper funcs that simply call the local 
 # func after extracting the args from a request
 
 
 
-# todo change this to return to the frontend homepage
+# todo change this to return to the templates homepage
 auth_completed_url = spio.myUrl + "authentication_completed"
 
 sec = []
@@ -39,7 +39,7 @@ client_secret= sec[1]
 
 # Todo, you can probably remove these now, double check though
 global access_token
-global refresh_token 
+global refresh_token
 
 ####################################
 ###########  Auth Code  ############  
@@ -49,16 +49,17 @@ global refresh_token
 # Tokens are present it presents the landing page, if not it requests tokens
 @app.route("/")
 def initialize():
-    session = request.cookies.get('SESSION_ID', '')
-    print(session)
-    print(1)
     try:
         spio.get_access_token(user)
         return redirect(auth_completed_url)
-    except:
-        return redirect(spio.get_new_tokens().url)
+    except Exception as e:
+        print(e)
+        x = spio.get_new_tokens()
+        return redirect(x.url)
 
 # Landing page to return from a Spotify Token Request
+# not gonna get a refresh token all the time except when you explicitly ask for one
+# https://stackoverflow.com/questions/10827920/not-receiving-google-oauth-refresh-token
 @app.route("/authentication_return")
 def get_tokens():
     code = ""
@@ -67,7 +68,7 @@ def get_tokens():
     except:
          print("the code was not present, auth failed")
          redirect(spio.myUrl)
-    
+
     # if auth succeeds we build the url to get our tokens from the "code"
     response = spio.get_tokens_from_code(code)
 
@@ -77,7 +78,7 @@ def get_tokens():
     ttl = jsonResp["expires_in"]
     expires_at = int(time.time()) + ttl
 
-    # todo unsure where the rest of the vars for the tokens are from, could be a simple jsonresp.dump
+    print(jsonResp)
 
     return redirect(auth_completed_url)            
 
@@ -86,7 +87,18 @@ def get_tokens():
 # todo a one time refresh button to override the playlist refresh timer
 @app.route("/authentication_completed")
 def signed_in():
-    return "you made it"
+
+    return render_template("index.html")
+
+@app.route("/Create")
+def create():
+
+    return render_template("create.html")
+
+@app.route("/Edit")
+def edit():
+
+    return render_template("edit.html")
 ####################################
 ######### End Auth Code  ########### 
 ####################################
@@ -95,7 +107,7 @@ def signed_in():
 ######## Interactive Code ##########
 ####################################
 
-# Takes playlists owned by the user and formats them to be sent to the frontend
+# Takes playlists owned by the user and formats them to be sent to the templates
 @app.route("/list_playlists")
 def list_playlists_request():
     user = request.args["user"]

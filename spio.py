@@ -3,7 +3,7 @@ import json
 
 # put this in the DB as well NO GLOBALS!
 myUrl = "http://127.0.0.1:5000/"
-cwd = "/Users/Danny/Documents/CS/SpotifyAppend/backend"
+cwd = "/Users/Danny/Documents/CS/SpotifyAppend"
 uri_header = "spotify:playlist:"
 sec = [] # Secrets can be put in the db secrets table
 with open(cwd + "/Secrets", "r") as infile:
@@ -166,7 +166,7 @@ def generate_uri_string(tracks):
 
 ##### User Interaction Token Code #####
 # todo UI token code will be moved back to spotify.py or into another file
-# backend Token code =/= frontend token code, for the backend if the tokens are hosed
+# backend Token code =/= templates token code, for the backend if the tokens are hosed
 # just give up and cry
 def get_tokens_from_code(code):
     """
@@ -175,7 +175,8 @@ def get_tokens_from_code(code):
     :return: POSTs the code and returns the response, containing the tokens
     """
     url = "https://accounts.spotify.com/api/token/"
-    params = {"grant_type" :"authorization_code", "code" : code, "redirect_uri":myUrl + "authentication_return"}
+    params = {"grant_type": "client_credentials", "code": code, "redirect_uri": myUrl + "authentication_return"}
+    # params = {"grant_type": "refresh_token", "code": code, "redirect_uri": myUrl + "authentication_return"}
     headers = make_authorization_headers(client_id, client_secret)
     return requests.post(url=url, data=params, headers=headers)
 
@@ -183,7 +184,7 @@ def get_tokens_from_code(code):
 def get_new_tokens():
     url = "https://accounts.spotify.com/authorize/"
     scopes = "playlist-read-private playlist-modify-public playlist-modify-private playlist-read-collaborative user-follow-read"
-    params = { "client_id":client_id, "response_type":"code", "redirect_uri": myUrl + "authentication_return", "scope":scopes}
+    params = { "client_id": client_id, "response_type": "code", "redirect_uri": myUrl + "authentication_return", "scope": scopes}
     a = requests.get(url=url, params=params)
     return a
 
