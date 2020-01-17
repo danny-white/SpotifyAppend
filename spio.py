@@ -13,6 +13,7 @@ client_id = sec[0]
 client_secret= sec[1]
 
 
+
 ####################################
 ######## Spotify IO Code  ########## 
 ####################################
@@ -175,8 +176,7 @@ def get_tokens_from_code(code):
     :return: POSTs the code and returns the response, containing the tokens
     """
     url = "https://accounts.spotify.com/api/token/"
-    params = {"grant_type": "client_credentials", "code": code, "redirect_uri": myUrl + "authentication_return"}
-    # params = {"grant_type": "refresh_token", "code": code, "redirect_uri": myUrl + "authentication_return"}
+    params = {"grant_type": "authorization_code", "code": code, "redirect_uri": myUrl + "authentication_return"}
     headers = make_authorization_headers(client_id, client_secret)
     return requests.post(url=url, data=params, headers=headers)
 
@@ -189,6 +189,16 @@ def get_new_tokens():
     return a
 
 ##### End User Interaction Token Code #####
+
+def write_new_tokens(user, tokenJson):
+    with tokenfile_open(user, "w+") as tokenfile:
+        new_token = {}
+        new_token["access_token"] = tokenJson["access_token"]
+        ttl = tokenJson["expires_in"]
+        new_token["expires_at_epoch"] = ttl + int(time.time())
+        if "refresh_token" in tokenJson:
+            new_token["refresh_token"] = tokenJson["refresh_token"]
+        json.dump(new_token, tokenfile)
 
 def get_access_token(user):
     # access the users token file

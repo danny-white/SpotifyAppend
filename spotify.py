@@ -53,9 +53,7 @@ def initialize():
         spio.get_access_token(user)
         return redirect(auth_completed_url)
     except Exception as e:
-        print(e)
-        x = spio.get_new_tokens()
-        return redirect(x.url)
+        return redirect(spio.get_new_tokens().url)
 
 # Landing page to return from a Spotify Token Request
 # not gonna get a refresh token all the time except when you explicitly ask for one
@@ -75,10 +73,7 @@ def get_tokens():
     # Save Tokens
     jsonResp = response.json()
 
-    ttl = jsonResp["expires_in"]
-    expires_at = int(time.time()) + ttl
-
-    print(jsonResp)
+    spio.write_new_tokens(user, jsonResp)
 
     return redirect(auth_completed_url)            
 

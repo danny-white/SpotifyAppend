@@ -106,7 +106,6 @@ class Drainlist:
             except FileNotFoundError as e:
                 uri = e.filename.split("/")[-1]
                 self.add_source_api(uri)
-
     def add_source_file(self, source_name):
         """
         Adds a new Playlist source to a drainlist by filename (Playlist URI)
