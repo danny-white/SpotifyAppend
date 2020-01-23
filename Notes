@@ -1,0 +1,11 @@
+Always use fully qualified URI's, if a function needs just an ID then do the stripping at the function level.
+
+web endpoints are are
+list the drains, which will show active drains
+list playlists, showing playlists
+
+and create a new drain, which creates a new playlist based
+on selected playlists
+
+
+
