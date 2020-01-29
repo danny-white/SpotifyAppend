@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/base64"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
@@ -23,16 +22,10 @@ type tokenSerialized struct {
 	Refresh_token string
 }
 
-func convertToken(response tokenResponse) tokenSerialized {
-	retTok := tokenSerialized{response.Access_token,0,response.Refresh_token}
-	now := time.Now()
-	secs := now.Unix()
-	retTok.Expires_at = int64(response.Expires_in) + secs
-	return retTok
-}
+var spoturl = "https://accounts.spotify.com"
 
-func get_tokens_from_code(code string) tokenResponse{
-	spoturl := "https://accounts.spotify.com"
+//todo effectively untestable because we only get a single use from a code and you can't get a code get_new_tokens()
+func get_tokens_from_code(code string, client clientFacade ) tokenResponse{
 	resource := "/api/token/"
 	query := map[string]string{
 		"grant_type": "authorization_code",
@@ -57,7 +50,6 @@ func get_tokens_from_code(code string) tokenResponse{
 
 	container := tokenResponse{}
 
-	client := &http.Client{}
 	resp, _ := client.Do(req)
 	body, _ := ioutil.ReadAll(resp.Body)
 
@@ -67,8 +59,10 @@ func get_tokens_from_code(code string) tokenResponse{
 	}
 	return container
 }
-func get_new_tokens() string{
-	spoturl := "https://accounts.spotify.com/authorize/"
+
+//todo untestable since it requires the call to come from a browser where the user of said browser has a spotify account
+func get_new_tokens() string {
+	resource := "/authorize/"
 	scopes := "playlist-read-private playlist-modify-public playlist-modify-private playlist-read-collaborative user-follow-read"
 	query := map[string]string{
 		"client_id" : client_id,
@@ -76,7 +70,10 @@ func get_new_tokens() string{
 		"scope" : scopes,
 		"redirect_uri" : myUrl + "authentication_return",
 	}
+
 	baseUrl, _ := url.Parse(spoturl)
+	baseUrl.Path = resource
+
 	params := url.Values{}
 	for k , v := range query {
 		params.Add(k,v)
@@ -86,18 +83,41 @@ func get_new_tokens() string{
 	return baseUrl.String()
 }
 
-func write_new_tokens(user string, tokenJson map[string]string){
-}
-func get_access_token(user string){
-}
-func get_refresh_token(user string){
-}
-func refresh_tokens(user string){
-}
-func tokenfile_open(user string){
-}
-func make_authorization_headers(client_id string, client_secret string) map[string]string{
-	sEnc := base64.StdEncoding.EncodeToString([]byte(client_id + ":" + client_secret))
 
-	return map[string]string{"Authorization": "Basic " + sEnc}
+func refresh_tokens(user string, client clientFacade ){
+	resource := "/api/token/"
+	refreshToken := get_refresh_token(user)
+	query := map[string]string{
+		"grant_type" : "refresh_token",
+		"refresh_token" : refreshToken,
+	}
+
+	baseUrl, _ := url.ParseRequestURI(spoturl)
+	baseUrl.Path = resource
+
+	params := url.Values{}
+	for k , v := range query {
+		params.Add(k,v)
+	}
+
+	headers := make_authorization_headers(client_id, client_secret)
+	req, _ := http.NewRequest("POST", baseUrl.String(), strings.NewReader(params.Encode()))
+	for k,v := range headers {
+		req.Header.Set(k,v)
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	container := tokenResponse{}
+
+	resp, _ := client.Do(req)
+	body, _ := ioutil.ReadAll(resp.Body)
+	_ = resp.Body.Close()
+
+	err := json.Unmarshal(body, &container)
+	if err != nil {
+		panic(err)
+	}
+
+	container.Refresh_token = refreshToken
+	save_tokens(container, user, time.Now().Unix())
 }
