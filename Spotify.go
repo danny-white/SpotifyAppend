@@ -18,10 +18,9 @@ func init_handler()(h http.Handler){
 
 func hello(w http.ResponseWriter, r *http.Request) {
 
-
 	code := parseCode(r.URL.String())
 	_, _ = w.Write([]byte("code is " + code))
-	tokens := get_tokens_from_code(code, &http.Client{})
+	tokens := get_tokens_from_code(code, spotifyClient{})
 	save_tokens(tokens, user, time.Now().Unix())
 }
 

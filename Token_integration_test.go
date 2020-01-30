@@ -1,13 +1,12 @@
 package main
 
 import (
-	"net/http"
 	"testing"
 )
 
 var integUser = "Danny"
 
-func Test_refresh_tokens(t *testing.T) {
+func Test_refresh_tokens_integ(t *testing.T) {
 	token1 := load_tokens(integUser)
 	type args struct {
 		user string
@@ -25,7 +24,7 @@ func Test_refresh_tokens(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			refresh_tokens(tt.args.user, &http.Client{})
+			refresh_tokens(tt.args.user, spotifyClient{})
 			verifyRefresh(t, token1)
 		})
 	}

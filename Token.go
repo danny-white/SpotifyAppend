@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
@@ -24,7 +23,6 @@ type tokenSerialized struct {
 
 var spoturl = "https://accounts.spotify.com"
 
-//todo effectively untestable because we only get a single use from a code and you can't get a code get_new_tokens()
 func get_tokens_from_code(code string, client clientFacade ) tokenResponse{
 	resource := "/api/token/"
 	query := map[string]string{
@@ -50,17 +48,18 @@ func get_tokens_from_code(code string, client clientFacade ) tokenResponse{
 
 	container := tokenResponse{}
 
-	resp, _ := client.Do(req)
-	body, _ := ioutil.ReadAll(resp.Body)
+	body, err := client.Do(req)
+	if err != nil {
+		panic(err)
+	}
 
-	err := json.Unmarshal(body, &container)
+	err = json.Unmarshal(body, &container)
 	if err != nil {
 		panic(err)
 	}
 	return container
 }
 
-//todo untestable since it requires the call to come from a browser where the user of said browser has a spotify account
 func get_new_tokens() string {
 	resource := "/authorize/"
 	scopes := "playlist-read-private playlist-modify-public playlist-modify-private playlist-read-collaborative user-follow-read"
@@ -109,11 +108,12 @@ func refresh_tokens(user string, client clientFacade ){
 
 	container := tokenResponse{}
 
-	resp, _ := client.Do(req)
-	body, _ := ioutil.ReadAll(resp.Body)
-	_ = resp.Body.Close()
+	body, err := client.Do(req)
+	if err != nil {
+		panic(err)
+	}
 
-	err := json.Unmarshal(body, &container)
+	err = json.Unmarshal(body, &container)
 	if err != nil {
 		panic(err)
 	}

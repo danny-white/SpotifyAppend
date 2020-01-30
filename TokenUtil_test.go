@@ -1,8 +1,9 @@
 package main
 
 import (
+	"encoding/json"
+	"fmt"
 	"io/ioutil"
-	"net/http"
 	"os"
 	"reflect"
 	"strings"
@@ -16,7 +17,12 @@ var TestUser = "Test"
 
 var tokSer = tokenSerialized{access, 1234, refresh}
 var tokResp = tokenResponse{access, "A", 1234, refresh, "a"}
+var tokRespSer = "{\"Access_token\":\"Atok\",\"Tokentype\":\"A\",\"Expires_in\":1234,\"Refresh_token\":\"Rtok\",\"Scope\":\"a\"}"
 
+func Test_parseCosde(t *testing.T) {
+	s, _ := json.Marshal(tokResp)
+	fmt.Println(string(s))
+}
 
 func Test_parseCode(t *testing.T) {
 	type args struct {
@@ -201,7 +207,7 @@ func Test_get_access_token(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := get_access_token(tt.args.user, 0, &http.Client{}); got != tt.want {
+			if got := get_access_token(tt.args.user, 0, spotifyClient{}); got != tt.want {
 				t.Errorf("get_access_token() = %v, want %v", got, tt.want)
 			}
 		})
