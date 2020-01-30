@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"reflect"
@@ -21,7 +20,9 @@ var tokRespSer = "{\"Access_token\":\"Atok\",\"Tokentype\":\"A\",\"Expires_in\":
 
 func Test_parseCosde(t *testing.T) {
 	s, _ := json.Marshal(tokResp)
-	fmt.Println(string(s))
+	if string(s) != "{\"Access_token\":\"Atok\",\"Tokentype\":\"A\",\"Expires_in\":1234,\"Refresh_token\":\"Rtok\",\"Scope\":\"a\"}" {
+		t.Error("you blew it gamer")
+	}
 }
 
 func Test_parseCode(t *testing.T) {

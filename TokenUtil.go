@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"strings"
 )
@@ -19,7 +18,7 @@ func save_tokens(tokens tokenResponse, user string, now int64) {
 	file, _ := json.Marshal(serialTokens)
 	err := ioutil.WriteFile(userToPath(user), file, 0644)
 	if err != nil {
-		fmt.Println(err)
+		panic(err)
 	}
 }
 
@@ -28,7 +27,7 @@ func load_tokens(user string) tokenSerialized {
 	serialTokens := tokenSerialized{}
 	err := json.Unmarshal(input, &serialTokens)
 	if err != nil {
-		fmt.Println(err)
+		panic(err)
 	}
 	return serialTokens
 }
@@ -37,12 +36,12 @@ func parseCode(url string) string {
 	return strings.Split(strings.Split(url, "?")[1], "=")[1]
 }
 
-func get_access_token(user string, expiry int64, client clientFacade) string {
+func get_access_token(user string, now int64, client clientFacade) string {
 	tokenSer := load_tokens(user)
 
 	// if the token is going to expire in the next minute, refresh
-	if tokenSer.Expires_at < expiry + 60 {
-		refresh_tokens(user, client)
+	if tokenSer.Expires_at < now+ 60 {
+		refresh_tokens(user, client, get_refresh_token(user))
 	}
 	return load_tokens(user).Access_token
 }

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"reflect"
 )
 // here you effectively extend the method Do, now you can have a faux implementation of http.client and with some DI
 // you can get bona-fide unit tests that don't exit the local box, just change client.do to do what you want,
@@ -15,6 +16,7 @@ type clientFacade interface {
 type mockClient struct {
 	resp []byte
 	expectedRequest http.Request
+	expectedBody string
 }
 
 type spotifyClient http.Client
@@ -28,8 +30,51 @@ func (client mockClient) validateRequest(req *http.Request) error {
 	if req == nil {
 		return nil
 	}
-	//todo should validate on method, url, header, body (have to tease it out to string from io.closer)
-	return fmt.Errorf("arg request did not match expected got: %v, wanted %v", req, client.expectedRequest)
+	//validate headers
+	eq := true
+	//headers
+	eq = reflect.DeepEqual(client.expectedRequest.Header, req.Header) && eq
+	if !eq {
+		fmt.Print("want: ")
+		fmt.Println(client.expectedRequest.Header)
+		fmt.Print("have: ")
+		fmt.Println(req.Header)
+	}
+	//url
+	eq = reflect.DeepEqual(client.expectedRequest.URL, req.URL) && eq
+	if !eq {
+		fmt.Print("want: ")
+		fmt.Println(client.expectedRequest.URL)
+		fmt.Print("have: ")
+		fmt.Println(req.URL)
+	}
+	//method
+	eq = reflect.DeepEqual(client.expectedRequest.Method, req.Method) && eq
+	if !eq {
+		fmt.Print("want: ")
+		fmt.Println(client.expectedRequest.Method)
+		fmt.Print("have: ")
+		fmt.Println(req.Method)
+	}
+
+	//body
+
+	bodybyte, _ := ioutil.ReadAll(req.Body)
+	body := string(bodybyte)
+	eq = reflect.DeepEqual(client.expectedBody, body) && eq
+	if !eq {
+		fmt.Print("want: ")
+		fmt.Println(client.expectedBody)
+		fmt.Print("have: ")
+		fmt.Println(body)
+	}
+
+	_ = req.Body.Close()
+	if eq {
+		return nil
+	} else {
+		return fmt.Errorf("arg request did not match expected got: %v, wanted %v", req, client.expectedRequest)
+	}
 }
 
 func (client spotifyClient) Do(req *http.Request) ([]byte, error) {

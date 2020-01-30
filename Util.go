@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"io/ioutil"
 	"strings"
 )
@@ -9,8 +8,7 @@ import (
 func getSecrets() (string, string){
 	dat, err := ioutil.ReadFile("Secrets")
 	if err != nil {
-		fmt.Print("shit's broke ")
-		fmt.Print(err)
+		panic(err)
 	}
 	secrets := strings.Split(string(dat), "\n")
 	return secrets[0], secrets[1]

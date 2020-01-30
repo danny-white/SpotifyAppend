@@ -1,12 +1,37 @@
 package main
 
 import (
+	"io/ioutil"
 	"net/http"
+	"net/url"
 	"reflect"
+	"strings"
 	"testing"
 )
-
+	
 func Test_refresh_tokens(t *testing.T) {
+	expectedRequest := http.Request{}
+	expectedRequest.Header = http.Header{}
+	headers := make_authorization_headers(client_id, client_secret)
+	for k,v := range headers {
+		expectedRequest.Header.Set(k,v)
+	}
+	expectedRequest.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	expectedRequest.URL, _ = url.ParseRequestURI( "https://accounts.spotify.com/api/token/")
+
+	expectedRequest.Method = "POST"
+
+	params := url.Values{}
+	query := map[string]string{
+		"grant_type" : "refresh_token",
+		"refresh_token" : "testTok",
+	}
+	for k , v := range query {
+		params.Add(k,v)
+	}
+	readerbody := strings.NewReader(params.Encode())
+	expectedBody, _ := ioutil.ReadAll(readerbody)
+
 	type args struct {
 		user   string
 		client clientFacade
@@ -15,11 +40,21 @@ func Test_refresh_tokens(t *testing.T) {
 		name string
 		args args
 	}{
-		// TODO: Add test cases.
+		{
+			name:"gamer",
+			args: args{
+				user:"Danny",
+				client:mockClient{
+					resp:[]byte(tokRespSer),
+					expectedRequest:expectedRequest,
+					expectedBody:string(expectedBody),
+				},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			refresh_tokens(tt.args.user, tt.args.client)
+			refresh_tokens(tt.args.user, tt.args.client, "testTok")
 		})
 	}
 }
@@ -45,6 +80,28 @@ func Test_get_new_tokens(t *testing.T) {
 
 func Test_get_tokens_from_code(t *testing.T) {
 	expectedRequest := http.Request{}
+	expectedRequest.Header = http.Header{}
+	headers := make_authorization_headers(client_id, client_secret)
+	for k,v := range headers {
+		expectedRequest.Header.Set(k,v)
+	}
+	expectedRequest.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	expectedRequest.URL, _ = url.ParseRequestURI( "https://accounts.spotify.com/api/token/")
+
+	expectedRequest.Method = "POST"
+
+	params := url.Values{}
+	query := map[string]string{
+		"grant_type": "authorization_code",
+		"code": "gamerCodeTime",
+		"redirect_uri": myUrl + "authentication_return",
+	}
+	for k , v := range query {
+		params.Add(k,v)
+	}
+	readerbody := strings.NewReader(params.Encode())
+	expectedBody, _ := ioutil.ReadAll(readerbody)
+
 	type args struct {
 		code   string
 		client clientFacade
@@ -61,6 +118,7 @@ func Test_get_tokens_from_code(t *testing.T) {
 				client: mockClient{
 					resp:[]byte(tokRespSer),
 					expectedRequest:expectedRequest,
+					expectedBody:string(expectedBody),
 				},
 			},
 			want:tokResp,

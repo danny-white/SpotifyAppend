@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/url"
+	"reflect"
 	"strings"
 	"time"
 )
@@ -83,9 +84,8 @@ func get_new_tokens() string {
 }
 
 
-func refresh_tokens(user string, client clientFacade ){
+func refresh_tokens(user string, client clientFacade, refreshToken string ){
 	resource := "/api/token/"
-	refreshToken := get_refresh_token(user)
 	query := map[string]string{
 		"grant_type" : "refresh_token",
 		"refresh_token" : refreshToken,
@@ -119,5 +119,10 @@ func refresh_tokens(user string, client clientFacade ){
 	}
 
 	container.Refresh_token = refreshToken
-	save_tokens(container, user, time.Now().Unix())
+	if reflect.TypeOf(client).Name() == "mockClient" {
+		//only overwrite if we're not doing a test lmao
+	} else {
+		save_tokens(container, user, time.Now().Unix())
+	}
+
 }
