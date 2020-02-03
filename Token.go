@@ -2,10 +2,8 @@ package main
 
 import (
 	"encoding/json"
-	"net/http"
 	"net/url"
 	"reflect"
-	"strings"
 	"time"
 )
 type tokenResponse struct {
@@ -22,38 +20,25 @@ type tokenSerialized struct {
 	Refresh_token string
 }
 
-var spoturl = "https://accounts.spotify.com"
-
 func get_tokens_from_code(code string, client clientFacade ) tokenResponse{
 	resource := "/api/token/"
-	query := map[string]string{
+	params := map[string]string{
 		"grant_type": "authorization_code",
 		"code": code,
 		"redirect_uri": myUrl + "authentication_return",
 	}
 
-	baseUrl, _ := url.ParseRequestURI(spoturl)
-	baseUrl.Path = resource
-
-	params := url.Values{}
-	for k , v := range query {
-		params.Add(k,v)
-	}
-
 	headers := make_authorization_headers(client_id, client_secret)
-	req, _ := http.NewRequest("POST", baseUrl.String(), strings.NewReader(params.Encode()))
-	for k,v := range headers {
-		req.Header.Set(k,v)
-	}
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	headers["Content-Type"] = "application/x-www-form-urlencoded"
 
-	container := tokenResponse{}
+	req := createRequest().withURL(SPOTIFY_URL + resource).withMethod("POST").withBody(params).withHeaders(headers).build()
 
 	body, err := client.Do(req)
 	if err != nil {
 		panic(err)
 	}
 
+	container := tokenResponse{}
 	err = json.Unmarshal(body, &container)
 	if err != nil {
 		panic(err)
@@ -71,7 +56,7 @@ func get_new_tokens() string {
 		"redirect_uri" : myUrl + "authentication_return",
 	}
 
-	baseUrl, _ := url.Parse(spoturl)
+	baseUrl, _ := url.Parse(SPOTIFY_URL)
 	baseUrl.Path = resource
 
 	params := url.Values{}
@@ -86,25 +71,15 @@ func get_new_tokens() string {
 
 func refresh_tokens(user string, client clientFacade, refreshToken string ){
 	resource := "/api/token/"
-	query := map[string]string{
+	params := map[string]string{
 		"grant_type" : "refresh_token",
 		"refresh_token" : refreshToken,
 	}
 
-	baseUrl, _ := url.ParseRequestURI(spoturl)
-	baseUrl.Path = resource
-
-	params := url.Values{}
-	for k , v := range query {
-		params.Add(k,v)
-	}
-
 	headers := make_authorization_headers(client_id, client_secret)
-	req, _ := http.NewRequest("POST", baseUrl.String(), strings.NewReader(params.Encode()))
-	for k,v := range headers {
-		req.Header.Set(k,v)
-	}
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	headers["Content-Type"] = "application/x-www-form-urlencoded"
+
+	req := createRequest().withURL(SPOTIFY_URL + resource).withHeaders(headers).withMethod("POST").withBody(params).build()
 
 	container := tokenResponse{}
 

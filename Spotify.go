@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"strings"
 	"time"
-	"net/url"
 )
 
 var client_id, client_secret = getSecrets()
@@ -40,24 +39,19 @@ func main() {
 }
 
 func getPlaylists(access_token string, client clientFacade, urlOffset string) []Playlist {
-	var url string
-	if urlOffset == "" {
-		url = "https://api.spotify.com/v1/me/playlists"
-	} else {
-		url = urlOffset
+	spotUrl := "https://api.spotify.com/v1/me/playlists"
+	if urlOffset != "" {
+		spotUrl = urlOffset
 	}
 
-	headers := make(map[string]string)
-	headers["Authorization"] = "Bearer " + access_token
+	headers := map[string]string{"Authorization":"Bearer " + access_token}
 
-	req, _ := http.NewRequest("GET", url, nil)
+	req := createRequest().withURL(spotUrl).withHeaders(headers).withMethod("GET").build()
 
-	for k,v := range headers {
-		req.Header.Add(k,v)
-	}
 	b, _ := client.Do(req)
 
 	dest := make(map[string]interface{})
+	fmt.Println(string(b))
 
 	err := json.Unmarshal(b, &dest)
 	if err != nil {
@@ -98,32 +92,16 @@ func getTracks(access_token string, client clientFacade, urlOffset string, playl
 
 	   headers :=  map[string]string {"Authorization": "Bearer " + access_token}
 
-	   req := makeRequest(spoturl, headers, nil, "GET")
+	   req := createRequest().withURL(spoturl).withHeaders(headers).withMethod("GET").build()
+
 	   b, _ := client.Do(req)
 	   fmt.Println(string(b))
 	   //works
-	   //next is "null"
+	   //next is nil if not a URI
+	   //items contains the tracks, gamer gamer
 }
 
 func uri2id(uri string) string {
 	return strings.Split(uri, ":")[2]
 }
 
-func makeRequest(spoturl string, headers map[string]string, body map[string]string, method string ) *http.Request {
-	var req *http.Request
-	if body != nil {
-		params := url.Values{} //gen body
-		for k , v := range body { //add the params
-			params.Add(k,v)
-		}
-		req, _ = http.NewRequest(method, spoturl, strings.NewReader(params.Encode())) //gen the req with body params, method, and URL
-	} else {
-		req, _ = http.NewRequest(method, spoturl, nil) //gen the req with no body params, method, and URL
-	}
-
-	for k,v := range headers { //add headers
-		req.Header.Add(k,v)
-	}
-
-	return req
-}

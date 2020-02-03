@@ -15,7 +15,7 @@ type clientFacade interface {
 }
 type mockClient struct {
 	resp []byte
-	expectedRequest http.Request
+	expectedRequest *http.Request
 	expectedBody string
 }
 
@@ -27,7 +27,7 @@ func (client mockClient) Do(req *http.Request) ([]byte, error){
 }
 
 func (client mockClient) validateRequest(req *http.Request) error {
-	if req == nil {
+	if req == nil || client.expectedRequest == nil {
 		return nil
 	}
 	//validate headers
