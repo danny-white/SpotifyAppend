@@ -51,7 +51,6 @@ func getPlaylists(access_token string, client clientFacade, urlOffset string) []
 	b, _ := client.Do(req)
 
 	dest := make(map[string]interface{})
-	fmt.Println(string(b))
 
 	err := json.Unmarshal(b, &dest)
 	if err != nil {
@@ -68,11 +67,10 @@ func getPlaylists(access_token string, client clientFacade, urlOffset string) []
 			name:plist["name"].(string),
 			uri:plist["uri"].(string),
 
-			tracks:nil, //todo get a function to fetch these
+			tracks:nil,
 			reference:false,
 		}
 		retList = append(retList, list)
-		//todo also deal with the whole 20 list max return deal
 	}
 	var next string
 	if dest["next"] != nil { //check next is not null
@@ -81,24 +79,30 @@ func getPlaylists(access_token string, client clientFacade, urlOffset string) []
 			retList = append(retList, getPlaylists(access_token, client, next)...)
 		}
 	}
-	return retList //todo does this even work (yes)
+	return retList
 }
 
-func getTracks(access_token string, client clientFacade, urlOffset string, playlist Playlist) {
+func getTracks(access_token string, client clientFacade, urlOffset string, playlist Playlist) []string{
 
-	   playlist_id := uri2id(playlist.uri)
-	   _ = make([]string,0)
-	   spoturl :=  "https://api.spotify.com/v1/playlists/" + playlist_id + "/tracks"
+	playlist_id := uri2id(playlist.uri)
+	_ = make([]string,0)
+	spoturl :=  "https://api.spotify.com/v1/playlists/" + playlist_id + "/tracks"
 
-	   headers :=  map[string]string {"Authorization": "Bearer " + access_token}
+	headers :=  map[string]string {"Authorization": "Bearer " + access_token}
 
-	   req := createRequest().withURL(spoturl).withHeaders(headers).withMethod("GET").build()
+	body := map[string]string {
+		"limit":"1",
+	}
 
-	   b, _ := client.Do(req)
-	   fmt.Println(string(b))
-	   //works
-	   //next is nil if not a URI
-	   //items contains the tracks, gamer gamer
+	req := createRequest().withURL(spoturl).withHeaders(headers).withQuery(body).withMethod("GET").build()
+
+	b, _ := client.Do(req)
+	fmt.Println(string(b))
+	//todo json.parse and get json[items][track][uri]
+	return nil
+	//works
+	//next is nil if not a URI
+	//items contains the tracks, gamer gamer
 }
 
 func uri2id(uri string) string {
