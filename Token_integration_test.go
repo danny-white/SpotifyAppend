@@ -7,7 +7,7 @@ import (
 var integUser = "Danny"
 
 func Test_refresh_tokens_integ(t *testing.T) {
-	token1 := load_tokens(integUser)
+	token1 := loadTokens(integUser)
 	type args struct {
 		user string
 	}
@@ -24,17 +24,17 @@ func Test_refresh_tokens_integ(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			refresh_tokens(tt.args.user, &spotifyClient{}, get_refresh_token(integUser))
+			refreshTokens(tt.args.user, &spotifyClient{}, getRefreshToken(integUser))
 			verifyRefresh(t, token1)
 		})
 	}
 }
 func verifyRefresh(t *testing.T, token1 tokenSerialized) {
-	token2 := load_tokens(integUser)
+	token2 := loadTokens(integUser)
 
-	expBool := token1.Expires_at != token2.Expires_at
-	accBool := token1.Access_token != token2.Access_token
-	refBool := token1.Refresh_token == token2.Refresh_token
+	expBool := token1.ExpiresAt != token2.ExpiresAt
+	accBool := token1.AccessToken != token2.AccessToken
+	refBool := token1.RefreshToken == token2.RefreshToken
 	if !(expBool && accBool && refBool) {
 		t.Fail()
 	}

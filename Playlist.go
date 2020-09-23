@@ -9,6 +9,7 @@ import (
 	"strings"
 )
 
+//A struct representing a Playlist in Spotify https://developer.spotify.com/documentation/web-api/reference/playlists/
 type Playlist struct {
 	user string
 	name string
@@ -17,18 +18,22 @@ type Playlist struct {
 	ref []string
 }
 
+//A Drainlist is simply a playlist which references other playlists to add songs from,
+//might change this implementation to have a third structure allowing us to differentiate between songs removed in sources vs songs
+//removed by the user...
 type Drainlist struct {
 	backing	*Playlist
 	sources []*Playlist
 }
 
-func getPlaylists(access_token string, client clientFacade, urlOffset string) []Playlist {
+//gets all playlists for the current user
+func getPlaylists(accessToken string, client clientFacade, urlOffset string) []Playlist {
 	spotUrl := "https://api.spotify.com/v1/me/playlists"
 	if urlOffset != "" {
 		spotUrl = urlOffset
 	}
 
-	headers := map[string]string{"Authorization":"Bearer " + access_token}
+	headers := map[string]string{"Authorization":"Bearer " + accessToken}
 
 	req := createRequest().withURL(spotUrl).withHeaders(headers).withMethod("GET").build()
 
@@ -60,22 +65,23 @@ func getPlaylists(access_token string, client clientFacade, urlOffset string) []
 	if dest["next"] != nil { //check next is not null
 		next = dest["next"].(string) //cast to string since something is there
 		if next != "" { //recurse
-			retList = append(retList, getPlaylists(access_token, client, next)...)
+			retList = append(retList, getPlaylists(accessToken, client, next)...)
 		}
 	}
 	return retList
 }
 
-func getTracks(access_token string, client *clientFacade, urlOffset string, playlist *Playlist) []string{
+//for a given playlist get all tracks
+func getTracks(accessToken string, client *clientFacade, urlOffset string, playlist *Playlist) []string{
 
-	playlist_id := uri2id(playlist.uri)
+	playlistId := uri2id(playlist.uri)
 	_ = make([]string,0)
-	spoturl :=  "https://api.spotify.com/v1/playlists/" + playlist_id + "/tracks"
+	spoturl :=  "https://api.spotify.com/v1/playlists/" + playlistId + "/tracks"
 	if urlOffset != "" {
 		spoturl = urlOffset
 	}
 
-	headers :=  map[string]string {"Authorization": "Bearer " + access_token}
+	headers :=  map[string]string {"Authorization": "Bearer " + accessToken}
 
 	req := createRequest().withURL(spoturl).withHeaders(headers).withMethod("GET").build()
 
@@ -99,20 +105,21 @@ func getTracks(access_token string, client *clientFacade, urlOffset string, play
 	if dest["next"] != nil { //check next is not null
 		next = dest["next"].(string) //cast to string since something is there
 		if next != "" { //recurse
-			uris = append(uris, getTracks(access_token, client, next, playlist)...)
+			uris = append(uris, getTracks(accessToken, client, next, playlist)...)
 		}
 	}
 	return uris
 
 }
 
-func addTracks(access_token string, client *clientFacade, track_uris []string, playlist *Playlist) error {
+//add the listed tracks to the given playlist
+func addTracks(accessToken string, client *clientFacade, trackUris []string, playlist *Playlist) error {
 	spoturl := "https://api.spotify.com/v1/playlists/" + uri2id(playlist.uri) + "/tracks"
 
-	headers := map[string]string{"Authorization":"Bearer " + access_token}
+	headers := map[string]string{"Authorization":"Bearer " + accessToken}
 
 	body := map[string][]string{
-		"uris" : track_uris,
+		"uris" : trackUris,
 	}
 
 	req := createRequest().withURL(spoturl).withHeaders(headers).withBodyJson(body).withMethod("POST").build()
@@ -128,15 +135,16 @@ func addTracks(access_token string, client *clientFacade, track_uris []string, p
 	return nil
 }
 
-func removeTracks(access_token string, client *clientFacade, track_uris []string, playlist *Playlist) error {
+//remove the listed tracks from the given playlist
+func removeTracks(accessToken string, client *clientFacade, trackUris []string, playlist *Playlist) error {
 	spoturl := "https://api.spotify.com/v1/playlists/" + uri2id(playlist.uri) + "/tracks"
 
-	headers := map[string]string{"Authorization":"Bearer " + access_token, "Content-Type":"application/json"}
+	headers := map[string]string{"Authorization":"Bearer " + accessToken, "Content-Type":"application/json"}
 	bodyMap := make([]map[string]string, 0)
 
-	for i := range track_uris {
+	for i := range trackUris {
 		tMap := make(map[string]string)
-		tMap["uri"] = track_uris[i]
+		tMap["uri"] = trackUris[i]
 		bodyMap = append(bodyMap, tMap)
 
 	}
@@ -159,12 +167,13 @@ func removeTracks(access_token string, client *clientFacade, track_uris []string
 	return nil
 }
 
-func createPlaylist(access_token string, client *clientFacade, name string) (string, error) {
+//creates a new playlist for the current user under the provided name
+func createPlaylist(accessToken string, client *clientFacade, name string) (string, error) {
 
-	user_id, _ := getUserID(access_token, client)
-	spoturl := "https://api.spotify.com/v1/users/" +  user_id + "/playlists"
+	userId, _ := getUserID(accessToken, client)
+	spoturl := "https://api.spotify.com/v1/users/" + userId + "/playlists"
 
-	headers := map[string]string{"Authorization":"Bearer " + access_token, "Content-Type":"application/json"}
+	headers := map[string]string{"Authorization":"Bearer " + accessToken, "Content-Type":"application/json"}
 	body := map[string]string{
 		"name" : name,
 	}
@@ -187,21 +196,23 @@ func createPlaylist(access_token string, client *clientFacade, name string) (str
 
 }
 
-func patchDrainlist(access_token string, client *clientFacade, target *Drainlist) error {
-	toAdd, toRem := computeDelta(access_token, client, target)
+//given the difference between what we have the target structure saved locally and what we want (the current state on the Spotify API)
+//Apply the requisite changes to patch the drainlist
+func patchDrainlist(accessToken string, client *clientFacade, target *Drainlist) error {
+	toAdd, toRem := computeDelta(accessToken, client, target)
 
 	sort.Strings(toAdd)
 	sort.Strings(toRem)
 
 	_, _, toRem = comm(toAdd, toRem) //you discard add - rem and change rem to equal rem - add, this prevents you from removing songs that another list has added
 
-	current := getTracks(access_token, client, "", target.backing)
+	current := getTracks(accessToken, client, "", target.backing)
 
 	_, toRem, _ = comm(current, toRem) //want to remove all items that are in remove and in current
 	_, _ , toAdd = comm(current, toAdd) //want to add all items that are in add and not in current
 
-	_ = removeTracks(access_token, client, toRem, target.backing)
-	_ = addTracks(access_token, client, toAdd, target.backing)
+	_ = removeTracks(accessToken, client, toRem, target.backing)
+	_ = addTracks(accessToken, client, toAdd, target.backing)
 
 	target.backing.ref = append(target.backing.ref, toAdd...) //add adds
 	sort.Strings(target.backing.ref) //sort
@@ -216,12 +227,12 @@ func patchDrainlist(access_token string, client *clientFacade, target *Drainlist
 	return nil
 }
 
-
-func computeDelta(access_token string, client *clientFacade,  target *Drainlist) ([]string, []string) {
+// Compute the items required to be added (and / or removed) between the in memory version of target, and the Spotify version
+func computeDelta(accessToken string, client *clientFacade,  target *Drainlist) ([]string, []string) {
 	globalAdd := make([]string, 0)
 	globalRem := make([]string, 0)
 	for i := range target.sources {
-		current := getTracks(access_token, client, "", target.sources[i])
+		current := getTracks(accessToken, client, "", target.sources[i])
 		ref := target.sources[i].ref
 		sort.Strings(current)
 		sort.Strings(ref)
@@ -244,11 +255,11 @@ func computeDelta(access_token string, client *clientFacade,  target *Drainlist)
 		Either list priority or default to add and the user can remove (again once a track is removed it is only re-added once a source adds it back)
  */
 
-
-func getUserID(access_token string, client *clientFacade) (string, error) {
+//get User ID from the tokens
+func getUserID(accessToken string, client *clientFacade) (string, error) {
 	spoturl := "https://api.spotify.com/v1/me"
 
-	headers := map[string]string{"Authorization":"Bearer " + access_token, "Content-Type":"application/json"}
+	headers := map[string]string{"Authorization":"Bearer " + accessToken, "Content-Type":"application/json"}
 
 	req := createRequest().withURL(spoturl).withHeaders(headers).withMethod("GET").build()
 	b, _ := (*client).Do(req)

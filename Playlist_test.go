@@ -19,9 +19,9 @@ func Test_getPlaylists(t *testing.T) {
 	}
 
 	type args struct {
-		access_token string
-		client       clientFacade
-		urlOffset    string
+		accessToken string
+		client      clientFacade
+		urlOffset   string
 	}
 	tests := []struct {
 		name string
@@ -31,9 +31,9 @@ func Test_getPlaylists(t *testing.T) {
 		{
 			name: "noNext",
 			args: args{
-				access_token: get_access_token("Danny", time.Now().Unix(), clnt),
-				client:       clnt,
-				urlOffset:    "",
+				accessToken: getAccessToken("Danny", time.Now().Unix(), clnt),
+				client:      clnt,
+				urlOffset:   "",
 			},
 			want: []Playlist{
 				{
@@ -49,7 +49,7 @@ func Test_getPlaylists(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := getPlaylists(tt.args.access_token, tt.args.client, tt.args.urlOffset); !reflect.DeepEqual(got, tt.want) {
+			if got := getPlaylists(tt.args.accessToken, tt.args.client, tt.args.urlOffset); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("getPlaylists() = %v, want %v", got, tt.want)
 
 			}
@@ -62,10 +62,10 @@ func Test_getTracks(t *testing.T) {
 	client := spotifyClient(http.Client{})
 	clnt := &client
 	type args struct {
-		access_token string
-		client       clientFacade
-		urlOffset    string
-		playlist     *Playlist
+		accessToken string
+		client      clientFacade
+		urlOffset   string
+		playlist    *Playlist
 	}
 	tests := []struct {
 		name string
@@ -74,9 +74,9 @@ func Test_getTracks(t *testing.T) {
 		{
 			name:"test",
 			args:args{
-				access_token:get_access_token("Danny", time.Now().Unix(), clnt),
-				client:clnt,
-				urlOffset:"",
+				accessToken: getAccessToken("Danny", time.Now().Unix(), clnt),
+				client:      clnt,
+				urlOffset:   "",
 				playlist: &Playlist{
 					uri:"spotify:playlist:3S7Hbx2nGmiqf4TLH93QU6",
 				},
@@ -85,7 +85,7 @@ func Test_getTracks(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			getTracks(tt.args.access_token, &tt.args.client, tt.args.urlOffset, tt.args.playlist)
+			getTracks(tt.args.accessToken, &tt.args.client, tt.args.urlOffset, tt.args.playlist)
 		})
 	}
 }
@@ -94,10 +94,10 @@ func Test_addTracks(t *testing.T) {
 	client := spotifyClient(http.Client{})
 	clnt := &client
 	type args struct {
-		access_token string
-		client       clientFacade
-		track_uris   []string
-		playlist     *Playlist
+		accessToken string
+		client      clientFacade
+		trackUris   []string
+		playlist    *Playlist
 	}
 	tests := []struct {
 		name    string
@@ -107,9 +107,9 @@ func Test_addTracks(t *testing.T) {
 		{
 			name: "test",
 			args:args{
-				access_token:get_access_token("Danny", time.Now().Unix(), clnt),
-				client:clnt,
-				track_uris:[]string{"spotify:track:3Gi9XELDEagGny8QInTscT"},
+				accessToken: getAccessToken("Danny", time.Now().Unix(), clnt),
+				client:      clnt,
+				trackUris:   []string{"spotify:track:3Gi9XELDEagGny8QInTscT"},
 				playlist: &Playlist{
 					uri:"spotify:playlist:6VXsLMPKQ6v3rPXjgAKBxA",
 				},
@@ -120,7 +120,7 @@ func Test_addTracks(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := addTracks(tt.args.access_token, &tt.args.client, tt.args.track_uris, tt.args.playlist); (err != nil) != tt.wantErr {
+			if err := addTracks(tt.args.accessToken, &tt.args.client, tt.args.trackUris, tt.args.playlist); (err != nil) != tt.wantErr {
 				t.Errorf("addTracks() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -131,10 +131,10 @@ func Test_removeTracks(t *testing.T) {
 	client := spotifyClient(http.Client{})
 	clnt := &client
 	type args struct {
-		access_token string
-		client       clientFacade
-		track_uris   []string
-		playlist     *Playlist
+		accessToken string
+		client      clientFacade
+		trackUris   []string
+		playlist    *Playlist
 	}
 	tests := []struct {
 		name    string
@@ -144,9 +144,9 @@ func Test_removeTracks(t *testing.T) {
 		{
 			name:"test",
 			args:args{
-				access_token:get_access_token("Danny", time.Now().Unix(), clnt),
-				client:clnt,
-				track_uris:[]string{"spotify:track:3Gi9XELDEagGny8QInTscT"},
+				accessToken: getAccessToken("Danny", time.Now().Unix(), clnt),
+				client:      clnt,
+				trackUris:   []string{"spotify:track:3Gi9XELDEagGny8QInTscT"},
 				playlist: &Playlist{
 					uri:"spotify:playlist:6VXsLMPKQ6v3rPXjgAKBxA",
 				},
@@ -155,7 +155,7 @@ func Test_removeTracks(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := removeTracks(tt.args.access_token, &tt.args.client, tt.args.track_uris, tt.args.playlist); (err != nil) != tt.wantErr {
+			if err := removeTracks(tt.args.accessToken, &tt.args.client, tt.args.trackUris, tt.args.playlist); (err != nil) != tt.wantErr {
 				t.Errorf("removeTracks() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -166,8 +166,8 @@ func Test_getUserID(t *testing.T) {
 	client := spotifyClient(http.Client{})
 	clnt := &client
 	type args struct {
-		access_token string
-		client       clientFacade
+		accessToken string
+		client      clientFacade
 	}
 	tests := []struct {
 		name    string
@@ -178,8 +178,8 @@ func Test_getUserID(t *testing.T) {
 		{
 			name:"test",
 			args:args{
-				access_token: get_access_token("Danny", time.Now().Unix(), clnt),
-				client:       clnt,
+				accessToken: getAccessToken("Danny", time.Now().Unix(), clnt),
+				client:      clnt,
 			},
 			want:"124995713",
 			wantErr:false,
@@ -187,7 +187,7 @@ func Test_getUserID(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := getUserID(tt.args.access_token, &tt.args.client)
+			got, err := getUserID(tt.args.accessToken, &tt.args.client)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("getUserID() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -203,9 +203,9 @@ func Test_createPlaylist(t *testing.T) {
 	client := spotifyClient(http.Client{})
 	clnt := &client
 	type args struct {
-		access_token string
-		client       clientFacade
-		name         string
+		accessToken string
+		client      clientFacade
+		name        string
 	}
 	tests := []struct {
 		name    string
@@ -215,9 +215,9 @@ func Test_createPlaylist(t *testing.T) {
 		{
 			name:"test",
 			args:args{
-				access_token: get_access_token("Danny", time.Now().Unix(), clnt),
-				client:       clnt,
-				name:         "testPlist",
+				accessToken: getAccessToken("Danny", time.Now().Unix(), clnt),
+				client:      clnt,
+				name:        "testPlist",
 			},
 
 			wantErr:false,
@@ -225,7 +225,7 @@ func Test_createPlaylist(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if uri, err := createPlaylist(tt.args.access_token, &tt.args.client, tt.args.name); (err != nil) != tt.wantErr {
+			if uri, err := createPlaylist(tt.args.accessToken, &tt.args.client, tt.args.name); (err != nil) != tt.wantErr {
 				if uri == "" {
 					t.Errorf("createPlaylist() error = %v, wantErr %v", err, tt.wantErr)
 				}

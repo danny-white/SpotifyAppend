@@ -6,26 +6,31 @@ import (
 	"net/http"
 	"reflect"
 )
-// here you effectively extend the method Do, now you can have a faux implementation of http.client and with some DI
+
+// Here you effectively extend the method Do, now you can have a faux implementation of http.client and with some DI
 // you can get bona-fide unit tests that don't exit the local box, just change client.do to do what you want,
 // in this case probably just return some values, but it can literally be anything
 // you can't just inline define a solution to the iface, you need a struct looks like
 type clientFacade interface {
 	Do(req *http.Request)([]byte, error)
 }
+
+// Real Client
+type spotifyClient http.Client
+
+//fake Client used for testing
 type mockClient struct {
 	resp []byte
 	expectedRequest *http.Request
 	expectedBody string
 }
 
-type spotifyClient http.Client
-
 func (client *mockClient) Do(req *http.Request) ([]byte, error){
 	resp := client.resp
 	return resp, client.validateRequest(req)
 }
 
+//Validate this request against the expected request which is provided when the mock Client is constructed
 func (client *mockClient) validateRequest(req *http.Request) error {
 	if req == nil || client.expectedRequest == nil {
 		return nil
@@ -77,6 +82,7 @@ func (client *mockClient) validateRequest(req *http.Request) error {
 	}
 }
 
+//Real implementation of Do in the client, which simply calls the underlying implementation and reads in the response
 func (client *spotifyClient) Do(req *http.Request) ([]byte, error) {
 	nativeClient := (*http.Client)(client)
 	resp, err := nativeClient.Do(req)

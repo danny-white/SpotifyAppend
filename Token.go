@@ -7,20 +7,20 @@ import (
 	"time"
 )
 type tokenResponse struct {
-	Access_token string
-	Tokentype string
-	Expires_in int
-	Refresh_token string
-	Scope string
+	AccessToken  string
+	TokenType    string
+	ExpiresIn    int
+	RefreshToken string
+	Scope        string
 }
 
 type tokenSerialized struct {
-	Access_token string
-	Expires_at int64
-	Refresh_token string
+	AccessToken  string
+	ExpiresAt    int64
+	RefreshToken string
 }
 
-func get_tokens_from_code(code string, client clientFacade ) tokenResponse{
+func getTokensFromCode(code string, client clientFacade ) tokenResponse{
 	resource := "/api/token/"
 	params := map[string]string{
 		"grant_type": "authorization_code",
@@ -28,7 +28,7 @@ func get_tokens_from_code(code string, client clientFacade ) tokenResponse{
 		"redirect_uri": myUrl + "authentication_return",
 	}
 
-	headers := make_authorization_headers(client_id, client_secret)
+	headers := makeAuthorizationHeaders(clientId, clientSecret)
 	headers["Content-Type"] = "application/x-www-form-urlencoded"
 
 	req := createRequest().withURL(SPOTIFY_URL + resource).withMethod("POST").withBody(params).withHeaders(headers).build()
@@ -46,14 +46,14 @@ func get_tokens_from_code(code string, client clientFacade ) tokenResponse{
 	return container
 }
 
-func get_new_tokens() string {
+func getNewTokens() string {
 	resource := "/authorize/"
 	scopes := "playlist-read-private playlist-modify-public playlist-modify-private playlist-read-collaborative user-follow-read"
 	query := map[string]string{
-		"client_id" : client_id,
+		"client_id" :     clientId,
 		"response_type" : "code",
-		"scope" : scopes,
-		"redirect_uri" : myUrl + "authentication_return",
+		"scope" :         scopes,
+		"redirect_uri" :  myUrl + "authentication_return",
 	}
 
 	baseUrl, _ := url.Parse(SPOTIFY_URL)
@@ -69,14 +69,14 @@ func get_new_tokens() string {
 }
 
 
-func refresh_tokens(user string, client clientFacade, refreshToken string ){
+func refreshTokens(user string, client clientFacade, refreshToken string ){
 	resource := "/api/token/"
 	params := map[string]string{
 		"grant_type" : "refresh_token",
 		"refresh_token" : refreshToken,
 	}
 
-	headers := make_authorization_headers(client_id, client_secret)
+	headers := makeAuthorizationHeaders(clientId, clientSecret)
 	headers["Content-Type"] = "application/x-www-form-urlencoded"
 
 	req := createRequest().withURL(SPOTIFY_URL + resource).withHeaders(headers).withMethod("POST").withBody(params).build()
@@ -93,11 +93,11 @@ func refresh_tokens(user string, client clientFacade, refreshToken string ){
 		panic(err)
 	}
 
-	container.Refresh_token = refreshToken
+	container.RefreshToken = refreshToken
 	if reflect.TypeOf(client).Name() == "mockClient" {
 		//only overwrite if we're not doing a test lmao
 	} else {
-		save_tokens(container, user, time.Now().Unix())
+		saveTokens(container, user, time.Now().Unix())
 	}
 
 }

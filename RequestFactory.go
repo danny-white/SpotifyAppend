@@ -9,6 +9,7 @@ import (
 	"strings"
 )
 
+//Builds http Requests Factory / Builder Style
 type factoryRequest http.Request
 
 func (req factoryRequest) withHeaders(headers map[string]string) factoryRequest {

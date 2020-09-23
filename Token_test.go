@@ -12,7 +12,7 @@ import (
 func Test_refresh_tokens(t *testing.T) {
 	expectedRequest := http.Request{}
 	expectedRequest.Header = http.Header{}
-	headers := make_authorization_headers(client_id, client_secret)
+	headers := makeAuthorizationHeaders(clientId, clientSecret)
 	for k,v := range headers {
 		expectedRequest.Header.Set(k,v)
 	}
@@ -54,7 +54,7 @@ func Test_refresh_tokens(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			refresh_tokens(tt.args.user, tt.args.client, "testTok")
+			refreshTokens(tt.args.user, tt.args.client, "testTok")
 		})
 	}
 }
@@ -71,7 +71,7 @@ func Test_get_new_tokens(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := get_new_tokens(); got != tt.want {
+			if got := getNewTokens(); got != tt.want {
 				t.Errorf("get_new_tokens() = %v, want %v", got, tt.want)
 			}
 		})
@@ -81,7 +81,7 @@ func Test_get_new_tokens(t *testing.T) {
 func Test_get_tokens_from_code(t *testing.T) {
 	expectedRequest := http.Request{}
 	expectedRequest.Header = http.Header{}
-	headers := make_authorization_headers(client_id, client_secret)
+	headers := makeAuthorizationHeaders(clientId, clientSecret)
 	for k,v := range headers {
 		expectedRequest.Header.Set(k,v)
 	}
@@ -126,7 +126,7 @@ func Test_get_tokens_from_code(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := get_tokens_from_code(tt.args.code, tt.args.client); !reflect.DeepEqual(got, tt.want) {
+			if got := getTokensFromCode(tt.args.code, tt.args.client); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("get_tokens_from_code() = %v, want %v", got, tt.want)
 			}
 		})

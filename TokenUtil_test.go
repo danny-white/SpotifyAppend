@@ -16,11 +16,11 @@ var TestUser = "Test"
 
 var tokSer = tokenSerialized{access, 1234, refresh}
 var tokResp = tokenResponse{access, "A", 1234, refresh, "a"}
-var tokRespSer = "{\"Access_token\":\"Atok\",\"Tokentype\":\"A\",\"Expires_in\":1234,\"Refresh_token\":\"Rtok\",\"Scope\":\"a\"}"
+var tokRespSer = "{\"Access_token\":\"Atok\",\"TokenType\":\"A\",\"Expires_in\":1234,\"Refresh_token\":\"Rtok\",\"Scope\":\"a\"}"
 
 func Test_parseCosde(t *testing.T) {
 	s, _ := json.Marshal(tokResp)
-	if string(s) != "{\"Access_token\":\"Atok\",\"Tokentype\":\"A\",\"Expires_in\":1234,\"Refresh_token\":\"Rtok\",\"Scope\":\"a\"}" {
+	if string(s) != "{\"Access_token\":\"Atok\",\"TokenType\":\"A\",\"Expires_in\":1234,\"Refresh_token\":\"Rtok\",\"Scope\":\"a\"}" {
 		t.Error("you blew it gamer")
 	}
 }
@@ -71,7 +71,7 @@ func Test_load_tokens(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := load_tokens(tt.args.user); !reflect.DeepEqual(got, tt.want) {
+			if got := loadTokens(tt.args.user); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("load_tokens() = %v, want %v", got, tt.want)
 			}
 		})
@@ -106,7 +106,7 @@ func Test_save_tokens(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			save_tokens(tt.args.tokens, TestUser, 0)
+			saveTokens(tt.args.tokens, TestUser, 0)
 			saveTeardown(t)
 		})
 	}
@@ -122,7 +122,7 @@ func saveTeardown(t *testing.T) {
 
 func Test_convertToken(t *testing.T) {
 	tokSer2 := tokSer
-	tokSer2.Expires_at += 100
+	tokSer2.ExpiresAt += 100
 	type args struct {
 		response tokenResponse
 		now      int64
@@ -160,8 +160,8 @@ func Test_convertToken(t *testing.T) {
 
 func Test_make_authorization_headers(t *testing.T) {
 	type args struct {
-		client_id     string
-		client_secret string
+		clientId     string
+		clientSecret string
 	}
 	tests := []struct {
 		name string
@@ -171,8 +171,8 @@ func Test_make_authorization_headers(t *testing.T) {
 		{
 			name: "name",
 			args: args{
-				client_id:     "gamer",
-				client_secret: "time",
+				clientId:     "gamer",
+				clientSecret: "time",
 			},
 			want: map[string]string{
 				"Authorization": "Basic Z2FtZXI6dGltZQ==",
@@ -181,7 +181,7 @@ func Test_make_authorization_headers(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := make_authorization_headers(tt.args.client_id, tt.args.client_secret); !reflect.DeepEqual(got, tt.want) {
+			if got := makeAuthorizationHeaders(tt.args.clientId, tt.args.clientSecret); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("make_authorization_headers() = %v, want %v", got, tt.want)
 			}
 		})
@@ -208,7 +208,7 @@ func Test_get_access_token(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := get_access_token(tt.args.user, 0, &spotifyClient{}); got != tt.want {
+			if got := getAccessToken(tt.args.user, 0, &spotifyClient{}); got != tt.want {
 				t.Errorf("get_access_token() = %v, want %v", got, tt.want)
 			}
 		})
@@ -236,7 +236,7 @@ func Test_get_refresh_token(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := get_refresh_token(tt.args.user); got != tt.want {
+			if got := getRefreshToken(tt.args.user); got != tt.want {
 				t.Errorf("get_refresh_token() = %v, want %v", got, tt.want)
 			}
 		})

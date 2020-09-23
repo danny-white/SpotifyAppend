@@ -48,9 +48,10 @@ func comm(a []string, b []string) ([]string, []string , []string){
 	return aMinusB, comm, bMinusA
 }
 
+//returns all unique elements in a slice
 func unique(intSlice []string) []string {
 	keys := make(map[string]bool)
-	list := []string{}
+	var list []string
 	for _, entry := range intSlice {
 		if _, value := keys[entry]; !value {
 			keys[entry] = true
@@ -80,4 +81,9 @@ func removeIfBoth(master []string, slave []string) []string {
 		}
 	}
 	return slave
+}
+
+//Extract ID from URI
+func uri2id(uri string) string {
+	return strings.Split(uri, ":")[2]
 }
