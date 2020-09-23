@@ -1,8 +1,6 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -23,87 +21,18 @@ func hello(w http.ResponseWriter, r *http.Request) {
 
 	code := parseCode(r.URL.String())
 	_, _ = w.Write([]byte("code is " + code))
-	tokens := get_tokens_from_code(code, spotifyClient{})
+	tokens := get_tokens_from_code(code, &spotifyClient{})
 	save_tokens(tokens, user, time.Now().Unix())
 }
 
 
 func main() {
-	//http.Handle("/",init_handler())
-	//http.HandleFunc("/authentication_return", hello)
-	//_ = http.ListenAndServe(":5000", nil)
-	client := spotifyClient(http.Client{})
-	a := getPlaylists(get_access_token(user, time.Now().Unix(), client), client, "")
-	fmt.Println(a)
-
+	http.Handle("/",init_handler())
+	http.HandleFunc("/authentication_return", hello)
+	_ = http.ListenAndServe(":5000", nil)
+	//get_new_tokens()
 }
 
-func getPlaylists(access_token string, client clientFacade, urlOffset string) []Playlist {
-	spotUrl := "https://api.spotify.com/v1/me/playlists"
-	if urlOffset != "" {
-		spotUrl = urlOffset
-	}
-
-	headers := map[string]string{"Authorization":"Bearer " + access_token}
-
-	req := createRequest().withURL(spotUrl).withHeaders(headers).withMethod("GET").build()
-
-	b, _ := client.Do(req)
-
-	dest := make(map[string]interface{})
-
-	err := json.Unmarshal(b, &dest)
-	if err != nil {
-		panic(err)
-	}
-	items := dest["items"].([]interface{})
-
-	retList := make([]Playlist, 0)
-
-	for _,v := range items {
-		plist := v.(map[string]interface{})
-		list := Playlist{
-			user:user,
-			name:plist["name"].(string),
-			uri:plist["uri"].(string),
-
-			tracks:nil,
-			reference:false,
-		}
-		retList = append(retList, list)
-	}
-	var next string
-	if dest["next"] != nil { //check next is not null
-		next = dest["next"].(string) //cast to string since something is there
-		if next != "" { //recurse
-			retList = append(retList, getPlaylists(access_token, client, next)...)
-		}
-	}
-	return retList
-}
-
-func getTracks(access_token string, client clientFacade, urlOffset string, playlist Playlist) []string{
-
-	playlist_id := uri2id(playlist.uri)
-	_ = make([]string,0)
-	spoturl :=  "https://api.spotify.com/v1/playlists/" + playlist_id + "/tracks"
-
-	headers :=  map[string]string {"Authorization": "Bearer " + access_token}
-
-	body := map[string]string {
-		"limit":"1",
-	}
-
-	req := createRequest().withURL(spoturl).withHeaders(headers).withQuery(body).withMethod("GET").build()
-
-	b, _ := client.Do(req)
-	fmt.Println(string(b))
-	//todo json.parse and get json[items][track][uri]
-	return nil
-	//works
-	//next is nil if not a URI
-	//items contains the tracks, gamer gamer
-}
 
 func uri2id(uri string) string {
 	return strings.Split(uri, ":")[2]

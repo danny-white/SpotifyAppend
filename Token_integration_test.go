@@ -24,7 +24,7 @@ func Test_refresh_tokens_integ(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			refresh_tokens(tt.args.user, spotifyClient{}, get_refresh_token(integUser))
+			refresh_tokens(tt.args.user, &spotifyClient{}, get_refresh_token(integUser))
 			verifyRefresh(t, token1)
 		})
 	}

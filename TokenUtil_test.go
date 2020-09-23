@@ -208,7 +208,7 @@ func Test_get_access_token(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := get_access_token(tt.args.user, 0, spotifyClient{}); got != tt.want {
+			if got := get_access_token(tt.args.user, 0, &spotifyClient{}); got != tt.want {
 				t.Errorf("get_access_token() = %v, want %v", got, tt.want)
 			}
 		})

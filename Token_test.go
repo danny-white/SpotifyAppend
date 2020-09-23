@@ -43,8 +43,8 @@ func Test_refresh_tokens(t *testing.T) {
 		{
 			name:"gamer",
 			args: args{
-				user:"Danny",
-				client:mockClient{
+				user:"TestUser",
+				client:&mockClient{
 					resp:[]byte(tokRespSer),
 					expectedRequest:&expectedRequest,
 					expectedBody:string(expectedBody),
@@ -115,7 +115,7 @@ func Test_get_tokens_from_code(t *testing.T) {
 			name: "name",
 			args: args{
 				code:"gamerCodeTime",
-				client: mockClient{
+				client: &mockClient{
 					resp:[]byte(tokRespSer),
 					expectedRequest:&expectedRequest,
 					expectedBody:string(expectedBody),

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -28,13 +29,22 @@ func (req factoryRequest) withBody(body map[string]string) factoryRequest {
 	return req
 }
 
+func (req factoryRequest) withBodyJson(body map[string][]string) factoryRequest {
+	s, _ := json.Marshal(body)
+	req.Body = ioutil.NopCloser(strings.NewReader(string(s)))
+	return req
+}
+func (req factoryRequest) withBaseReqeust(base http.Request) factoryRequest {
+	return factoryRequest(base)
+}
+
 func (req factoryRequest) withQuery(query map[string]string) factoryRequest {
 	if req.URL == nil {
 		fmt.Println("unable to add query if there is no url present to add to")
 		return req
 	}
 
-	urlQuery := url.Values{} //gen body
+	urlQuery := url.Values{}
 	for k , v := range query { //add the params
 		urlQuery.Add(k,v)
 	}

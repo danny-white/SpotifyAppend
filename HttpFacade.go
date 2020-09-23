@@ -21,12 +21,12 @@ type mockClient struct {
 
 type spotifyClient http.Client
 
-func (client mockClient) Do(req *http.Request) ([]byte, error){
+func (client *mockClient) Do(req *http.Request) ([]byte, error){
 	resp := client.resp
 	return resp, client.validateRequest(req)
 }
 
-func (client mockClient) validateRequest(req *http.Request) error {
+func (client *mockClient) validateRequest(req *http.Request) error {
 	if req == nil || client.expectedRequest == nil {
 		return nil
 	}
@@ -77,8 +77,8 @@ func (client mockClient) validateRequest(req *http.Request) error {
 	}
 }
 
-func (client spotifyClient) Do(req *http.Request) ([]byte, error) {
-	nativeClient := http.Client(client)
+func (client *spotifyClient) Do(req *http.Request) ([]byte, error) {
+	nativeClient := (*http.Client)(client)
 	resp, err := nativeClient.Do(req)
 	if err != nil {
 		return []byte{},err
