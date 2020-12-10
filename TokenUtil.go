@@ -8,8 +8,8 @@ import (
 )
 
 func convertToken(response tokenResponse, now int64) tokenSerialized {
-	retTok := tokenSerialized{response.AccessToken,0,response.RefreshToken}
-	retTok.ExpiresAt = int64(response.ExpiresIn) + now
+	retTok := tokenSerialized{response.Access_token,0,response.Refresh_token}
+	retTok.Expires_at = int64(response.Expires_in) + now
 	return retTok
 }
 
@@ -36,17 +36,18 @@ func parseCode(url string) string {
 	return strings.Split(strings.Split(url, "?")[1], "=")[1]
 }
 
-func getAccessToken(user string, now int64, client clientFacade) string {
+//XXX don't change to client*, breaks things
+func getAccess_token(user string, now int64, client clientFacade) string {
 	tokenSer := loadTokens(user)
 
 	// if the token is going to expire in the next minute, refresh
-	if tokenSer.ExpiresAt < now+ 60 {
+	if tokenSer.Expires_at < now+ 60 {
 		refreshTokens(user, client, getRefreshToken(user))
 	}
-	return loadTokens(user).AccessToken
+	return loadTokens(user).Access_token
 }
 func getRefreshToken(user string) string {
-	return loadTokens(user).RefreshToken
+	return loadTokens(user).Refresh_token
 }
 
 func userToPath(user string) string {

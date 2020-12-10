@@ -25,6 +25,21 @@ type mockClient struct {
 	expectedBody string
 }
 
+//Real implementation of Do in the client, which simply calls the underlying implementation and reads in the response
+func (client *spotifyClient) Do(req *http.Request) ([]byte, error) {
+	nativeClient := (*http.Client)(client)
+	resp, err := nativeClient.Do(req)
+	if err != nil {
+		return []byte{},err
+	}
+	body ,err :=ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return []byte{},err
+	}
+	err = resp.Body.Close()
+	return body, err
+}
+
 func (client *mockClient) Do(req *http.Request) ([]byte, error){
 	resp := client.resp
 	return resp, client.validateRequest(req)
@@ -80,21 +95,6 @@ func (client *mockClient) validateRequest(req *http.Request) error {
 	} else {
 		return fmt.Errorf("arg request did not match expected got: %v, wanted %v", req, client.expectedRequest)
 	}
-}
-
-//Real implementation of Do in the client, which simply calls the underlying implementation and reads in the response
-func (client *spotifyClient) Do(req *http.Request) ([]byte, error) {
-	nativeClient := (*http.Client)(client)
-	resp, err := nativeClient.Do(req)
-	if err != nil {
-		return []byte{},err
-	}
-	body ,err :=ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return []byte{},err
-	}
-	err = resp.Body.Close()
-	return body, err
 }
 
 

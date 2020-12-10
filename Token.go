@@ -7,19 +7,20 @@ import (
 	"time"
 )
 type tokenResponse struct {
-	AccessToken  string
-	TokenType    string
-	ExpiresIn    int
-	RefreshToken string
-	Scope        string
+	Access_token  string
+	Tokentype    string
+	Expires_in    int
+	Refresh_token string
+	Scope         string
 }
 
 type tokenSerialized struct {
-	AccessToken  string
-	ExpiresAt    int64
-	RefreshToken string
+	Access_token  string
+	Expires_at    int64
+	Refresh_token string
 }
 
+//XXX don't change to client*, breaks things
 func getTokensFromCode(code string, client clientFacade ) tokenResponse{
 	resource := "/api/token/"
 	params := map[string]string{
@@ -52,7 +53,7 @@ func getNewTokens() string {
 	query := map[string]string{
 		"client_id" :     clientId,
 		"response_type" : "code",
-		"scope" :         scopes,
+		"Scope" :         scopes,
 		"redirect_uri" :  myUrl + "authentication_return",
 	}
 
@@ -68,7 +69,7 @@ func getNewTokens() string {
 	return baseUrl.String()
 }
 
-
+//XXX don't change to client*, breaks things
 func refreshTokens(user string, client clientFacade, refreshToken string ){
 	resource := "/api/token/"
 	params := map[string]string{
@@ -93,7 +94,7 @@ func refreshTokens(user string, client clientFacade, refreshToken string ){
 		panic(err)
 	}
 
-	container.RefreshToken = refreshToken
+	container.Refresh_token = refreshToken
 	if reflect.TypeOf(client).Name() == "mockClient" {
 		//only overwrite if we're not doing a test lmao
 	} else {

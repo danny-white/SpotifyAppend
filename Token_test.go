@@ -66,7 +66,7 @@ func Test_get_new_tokens(t *testing.T) {
 	}{
 		{
 			name:"test",
-			want:"https://accounts.spotify.com/authorize/?client_id=7a1454711b0e4883affd973ca35a67e2&redirect_uri=http%3A%2F%2F127.0.0.1%3A5000%2Fauthentication_return&response_type=code&scope=playlist-read-private+playlist-modify-public+playlist-modify-private+playlist-read-collaborative+user-follow-read",
+			want:"https://accounts.spotify.com/authorize/?Scope=playlist-read-private+playlist-modify-public+playlist-modify-private+playlist-read-collaborative+user-follow-read&client_id=7a1454711b0e4883affd973ca35a67e2&redirect_uri=http%3A%2F%2F127.0.0.1%3A5000%2Fauthentication_return&response_type=code",
 		},
 	}
 	for _, tt := range tests {

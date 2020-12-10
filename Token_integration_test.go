@@ -32,9 +32,9 @@ func Test_refresh_tokens_integ(t *testing.T) {
 func verifyRefresh(t *testing.T, token1 tokenSerialized) {
 	token2 := loadTokens(integUser)
 
-	expBool := token1.ExpiresAt != token2.ExpiresAt
-	accBool := token1.AccessToken != token2.AccessToken
-	refBool := token1.RefreshToken == token2.RefreshToken
+	expBool := token1.Expires_at != token2.Expires_at
+	accBool := token1.Access_token != token2.Access_token
+	refBool := token1.Refresh_token == token2.Refresh_token
 	if !(expBool && accBool && refBool) {
 		t.Fail()
 	}

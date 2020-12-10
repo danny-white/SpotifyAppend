@@ -5,9 +5,13 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"os"
 	"sort"
 	"strings"
 )
+
+//so we persist these out, but in order to do this right we need to ensure we have ref before we write out, because the idea is
+// upon running sync we do tracks - ref and add those to the drain
 
 //A struct representing a Playlist in Spotify https://developer.spotify.com/documentation/web-api/reference/playlists/
 type Playlist struct {
@@ -27,7 +31,8 @@ type Drainlist struct {
 }
 
 //gets all playlists for the current user
-func getPlaylists(accessToken string, client clientFacade, urlOffset string) []Playlist {
+//XXX don't change to client*, breaks things
+func getPlaylists(user string, accessToken string, client clientFacade, urlOffset string) []Playlist {
 	spotUrl := "https://api.spotify.com/v1/me/playlists"
 	if urlOffset != "" {
 		spotUrl = urlOffset
@@ -65,7 +70,7 @@ func getPlaylists(accessToken string, client clientFacade, urlOffset string) []P
 	if dest["next"] != nil { //check next is not null
 		next = dest["next"].(string) //cast to string since something is there
 		if next != "" { //recurse
-			retList = append(retList, getPlaylists(accessToken, client, next)...)
+			retList = append(retList, getPlaylists(user, accessToken, client, next)...)
 		}
 	}
 	return retList
@@ -168,7 +173,7 @@ func removeTracks(accessToken string, client *clientFacade, trackUris []string, 
 }
 
 //creates a new playlist for the current user under the provided name
-func createPlaylist(accessToken string, client *clientFacade, name string) (string, error) {
+func createPlaylist(accessToken string, client *clientFacade, name string) (Playlist, error) {
 
 	userId, _ := getUserID(accessToken, client)
 	spoturl := "https://api.spotify.com/v1/users/" + userId + "/playlists"
@@ -189,10 +194,22 @@ func createPlaylist(accessToken string, client *clientFacade, name string) (stri
 
 	err := json.Unmarshal(b, &dest)
 	if err != nil {
-		return "", err
+		return Playlist{
+			user:   "",
+			name:   "",
+			uri:    "",
+			tracks: nil,
+			ref:    nil,
+		}, err
 	}
 
-	return dest["uri"].(string), nil
+	return Playlist{
+		user:   user,
+		name:   name,
+		uri:    dest["uri"].(string),
+		tracks: nil,
+		ref:    nil,
+	}, nil
 
 }
 
@@ -223,6 +240,7 @@ func patchDrainlist(accessToken string, client *clientFacade, target *Drainlist)
 	//3. if Item not in playlist and in rems, remove from rems
 	//4. if Item in playlist and in adds, remove from adds
 	//5. todo update drainlist ref table
+	//6. write back
 
 	return nil
 }
@@ -273,4 +291,27 @@ func getUserID(accessToken string, client *clientFacade) (string, error) {
 	return dest["id"].(string), nil
 }
 
+func write(drainlist Drainlist) error {
+	f, err := os.Create(drainlist.backing.user + "/" + drainlist.backing.name)
+	if err == nil {
+		panic(err)
+	}
+	enc := json.NewEncoder(f)
+	return enc.Encode(drainlist)
+}
 
+func read(user string, name string) Drainlist {
+	var data, err = os.Open(user + "/" + name)
+	if err == nil {
+		panic(err)
+	}
+	dec := json.NewDecoder(data)
+	var drainlist Drainlist
+	_ = dec.Decode(drainlist)
+	return drainlist
+}
+
+//TODO write this and similar for Drainlist, this runs, but is garbage obviously
+func (plist Playlist) MarshalJSON() ([]byte, error) {
+	return []byte("{\"this\":123}"), nil
+}

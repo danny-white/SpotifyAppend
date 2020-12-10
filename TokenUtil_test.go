@@ -16,11 +16,11 @@ var TestUser = "Test"
 
 var tokSer = tokenSerialized{access, 1234, refresh}
 var tokResp = tokenResponse{access, "A", 1234, refresh, "a"}
-var tokRespSer = "{\"Access_token\":\"Atok\",\"TokenType\":\"A\",\"Expires_in\":1234,\"Refresh_token\":\"Rtok\",\"Scope\":\"a\"}"
+var tokRespSer = "{\"Access_token\":\"Atok\",\"Tokentype\":\"A\",\"Expires_in\":1234,\"Refresh_token\":\"Rtok\",\"Scope\":\"a\"}"
 
 func Test_parseCosde(t *testing.T) {
 	s, _ := json.Marshal(tokResp)
-	if string(s) != "{\"Access_token\":\"Atok\",\"TokenType\":\"A\",\"Expires_in\":1234,\"Refresh_token\":\"Rtok\",\"Scope\":\"a\"}" {
+	if string(s) != "{\"Access_token\":\"Atok\",\"Tokentype\":\"A\",\"Expires_in\":1234,\"Refresh_token\":\"Rtok\",\"Scope\":\"a\"}" {
 		t.Error("you blew it gamer")
 	}
 }
@@ -122,7 +122,7 @@ func saveTeardown(t *testing.T) {
 
 func Test_convertToken(t *testing.T) {
 	tokSer2 := tokSer
-	tokSer2.ExpiresAt += 100
+	tokSer2.Expires_at += 100
 	type args struct {
 		response tokenResponse
 		now      int64
@@ -188,7 +188,7 @@ func Test_make_authorization_headers(t *testing.T) {
 	}
 }
 
-func Test_get_access_token(t *testing.T) {
+func Test_get_Access_token(t *testing.T) {
 	createTestTokens()
 	type args struct {
 		user string
@@ -208,8 +208,8 @@ func Test_get_access_token(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := getAccessToken(tt.args.user, 0, &spotifyClient{}); got != tt.want {
-				t.Errorf("get_access_token() = %v, want %v", got, tt.want)
+			if got := getAccess_token(tt.args.user, 0, &spotifyClient{}); got != tt.want {
+				t.Errorf("get_Access_token() = %v, want %v", got, tt.want)
 			}
 		})
 	}
